@@ -20,7 +20,7 @@
 #
 ###############################################################################
 ##
-##
+## FHEM module 46_GoECharger.pm
 # based at and tested with goE-Charger firmware 040 and API 1.5
 # and mail 14.04.20 from go-e (thanks go-e)
 # 0.1.7 added 'set' for new payload command 'amx': sets a temorary current value instead of storing at eeprom
