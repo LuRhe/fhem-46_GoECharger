@@ -17,7 +17,7 @@ More Help:
  ,,(Topic "Modul für Steuerung einer Go-ECharger Wallbox [= go-e oder go-echarger]") 
 	
 
-Installation and update:
+Installation as extra module and update:
 
 at your FHEM installation use commandline to add repository via command:
 
@@ -30,5 +30,14 @@ then update your FHEM: via command:
 and don't forget to reboot via command:
 
 	shutdown restart
+
+Device Definition:
+
+ <code>define &lt;name&gt; GoECharger &lt;hostip&gt;</code>
+ 
+Example:
+
+ <code>define myGoE GoECharger 192.168.1.34</code>
+
 
 I'm not responsible in case of any unexpected behaviours, failures, damages. That's not a deep inspected, reviewed or monitored software. It's an open source tool in relation to a proprietary commercial product: the product or it's API may be in change by future deliveries or firmware updates. Feel free to inspect and adopt the code.
