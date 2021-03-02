@@ -21,7 +21,7 @@ Installation and update:
 
 at your FHEM installation use commandline to add repository via command:
 
-	update add https://raw.githubusercontent.com/LuRhe/fhem-46_GoECharger/controls_46_GoECharger.txt
+	update add https://raw.githubusercontent.com/LuRhe/fhem-46_GoECharger/main/controls_46_GoECharger.txt
 
 then update your FHEM: via command:
 
