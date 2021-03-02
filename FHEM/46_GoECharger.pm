@@ -26,7 +26,7 @@
 # 0.1.7 added 'set' for new payload command 'amx': sets a temorary current value instead of storing at eeprom
 # 0.1.8 payload command 'amp' renamed to 'set amp_current_eeprom' with storing at reading Saved_amp_current_eeprom
 # 0.1.9 help changed
-# 0.2.0 enhanced set commands
+# 0.2.0 enhanced set commands 02.03.2021
 
 
 package main;
