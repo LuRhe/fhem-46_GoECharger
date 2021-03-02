@@ -1,5 +1,5 @@
 ###############################################################################
-# 
+#
 #  (c) 2020 Copyright Lutz R., Fhem forum user LR66 (LR66 at gmx dot de)
 #  All rights reserved
 #
@@ -26,12 +26,11 @@
 # 0.1.7 added 'set' for new payload command 'amx': sets a temorary current value instead of storing at eeprom
 # 0.1.8 payload command 'amp' renamed to 'set amp_current_eeprom' with storing at reading Saved_amp_current_eeprom
 # 0.1.9 help changed
-# 0.2.0 enhanced set commands 
+# 0.2.0 enhanced set commands
 # 0.2.1 changed help and attribute "used_api_keys" (default,all,minimal) 02.03.2021
 
 
 package main;
-
 
 my $missingModul = "";
 
@@ -55,178 +54,178 @@ my $maxamp;
 my $icodef='disabled.*:ev-station@darkgrey not_allowed.*:ev-station@white ready_no_car.*:ev-station@blue charging.*:ev-station@darkorange waiting_for_car.*:ev-station@pink finished.*:ev-station@lime error.*:ev-station@red .*:ev-station@yellow';
 
 sub GoECharger_API_V15($) {
-	%goevar			=	(	
-						version	=>	'version', 			#R# JSON, "B": normal, "C":  wenn Verschl. aktiviert 
-						rbc		=>	'reboot_counter',	#R# Anzahl Boot, .  
-						rbt		=>	'reboot_timer',		#R# msec seit letzten Bootvorgang, mit Ende-zu-Ende Verschl. 
+	%goevar			=	(
+						version	=>	'version', 			#R# JSON, "B": normal, "C":  wenn Verschl. aktiviert
+						rbc		=>	'reboot_counter',	#R# Anzahl Boot, .
+						rbt		=>	'reboot_timer',		#R# msec seit letzten Bootvorgang, mit Ende-zu-Ende Verschl.
 														# ges., Überlauf 49d mit Erhöh. rbc
-						car		=>	'car_state',		# R#Status PWM 1 = bereit - kein Fz., 2 = Fz. lädt, 
-														# 3 = Warte auf Fz., 4 = Ladung Ende - Fz. noch da 
-						amp		=>	'amp_current',		#W# Ampere Wert für PWM Sign. in ganzen Ampere von 6-32A 
+						car		=>	'car_state',		# R#Status PWM 1 = bereit - kein Fz., 2 = Fz. lädt,
+														# 3 = Warte auf Fz., 4 = Ladung Ende - Fz. noch da
+						amp		=>	'amp_current',		#W# Ampere Wert für PWM Sign. in ganzen Ampere von 6-32A
 						err		=>	'error',			#R# error: 1=RCCB (Fi), 3=PHASE, 8=NO_GROUND (Erdungserk.),
-														# 10= default INTERNAL (sonstiges) 
+														# 10= default INTERNAL (sonstiges)
 						ast		=>	'access_control_state',	#W# Zugangskontrolle,0=Offen,1=RFID/App nötig,
-														# 2= Strompr./ automatisch 
-						alw		=>	'allow_charging',	#W# PWM Signal darf anliegen,0 = nein, 1 = ja 
+														# 2= Strompr./ automatisch
+						alw		=>	'allow_charging',	#W# PWM Signal darf anliegen,0 = nein, 1 = ja
 						stp		=>	'stop_kWh_state_useless',	#W# autom. Abschaltung,0 = deaktiviert, 2 = nach kWh abschalten
 														# NICHT verwendet, dwo setzen reicht (0 deaktiviert)
-						cbl		=>	'amp_max_cable',	#R# Typ2 Kabel Ampere codierung,13-32 (0 = kein Kabel) 
-						pha		=>	'phases_available',	#R# Phasen vor und nach dem Schütz, binary 0b00ABCDEF 
+						cbl		=>	'amp_max_cable',	#R# Typ2 Kabel Ampere codierung,13-32 (0 = kein Kabel)
+						pha		=>	'phases_available',	#R# Phasen vor und nach dem Schütz, binary 0b00ABCDEF
 														# 0b00001000: Phase 1 vorh., 0b00111000: Phase1-3 vorh.
-														# A... phase 3, vor dem Schütz 
-														# B... phase 2 vor dem Schütz 
-														# C... phase 1 vor dem Schütz 
-														# D... phase 3 nach dem Schütz 
-														# E... phase 2 nach dem Schütz 
-														# F... phase 1 nach dem Schütz  
-						tmp		=>	'temperature',		#R# Temperatur des Controllers in °C 
+														# A... phase 3, vor dem Schütz
+														# B... phase 2 vor dem Schütz
+														# C... phase 1 vor dem Schütz
+														# D... phase 3 nach dem Schütz
+														# E... phase 2 nach dem Schütz
+														# F... phase 1 nach dem Schütz
+						tmp		=>	'temperature',		#R# Temperatur des Controllers in °C
 						dws		=>	'kWh_charged_last',	#R# Geladene Energiemenge in Deka-Watt-Sekunden,
-														# 100’000 = 1’000’000 Ws (=277Wh = 0,277kWh) 
-						dwo		=>	'stop_at_num_kWh',	#W# Abschaltwert in 0.1kWh wenn stp==2, für dws Parameter, 
-														# Beispiel: 105 für 10,5kWh 
-														# Ladebox-Logik:  if(dwo!=0 && dws/36000>=dwo)alw=0 
-						adi		=>	'amp_max16A_adapter',#R# Ladebox ist mit Adapter,0 = keiner, 1 = 16A_ADAPTER 
-						uby		=>	'unlocked_by_card',		#R# Nummer der RFID Karte, die Ladevorgang freigeschalten hat 
-						eto		=>	'kWh_charged_total',	#R# Gesamt geladene Energiemenge in 0.1kWh (130 = 13kWh) 
-						wst		=>	'wifi_state',		#R# WLAN Verbindungsstatus 3=verbunden, default=nicht verbunden 
-						nrg		=>	'energy_sensors',	#R# array[15]  Array mit Werten des Strom- und Spannungssensors 
-														# nrg[0]: Spannung auf L1 in Volt 
-														# nrg[1]: Spannung auf L2 in Volt 
-														# nrg[2]: Spannung auf L3 in Volt 
-														# nrg[3]: Spannung auf N in Volt 
-														# nrg[4]: Ampere auf L1 in 0.1A (123 entspricht 12,3A) 
-														# nrg[5]: Ampere auf L2 in 0.1A 
-														# nrg[6]: Ampere auf L3 in 0.1A 
-														# nrg[7]: Leistung auf L1 in 0.1kW (36 entspricht 3,6kW) 
-														# nrg[8]: Leistung auf L2 in 0.1kW 
-														# nrg[9]: Leistung auf L3 in 0.1kW 
-														# nrg[10]: Leistung auf N in 0.1kW 
-														# nrg[11]: Leistung gesamt  in 0.01kW (360 entspricht 3,6kW) 
-														# nrg[12]: Leistungsfaktor auf L1 in % 
-														# nrg[13]: Leistungsfaktor auf L2 in % 
-														# nrg[14]: Leistungsfaktor auf L3 in % 
-														# nrg[15]: Leistungsfaktor auf N in % 
- 
-														# App Logik:: 
-														# if(Math.floor(pha/8) ==1 && 
-														#  parseInt(nrg[3])>parseInt(nrg[0])){ 
-														#	  nrg[0]=nrg[3] 
-														#	  nrg[7]=nrg[10] 
-														#	  nrg[12]=nrg[15] 
-														# } 
-						fwv		=>	'firmware',			#R# String  Firmware Version Beispiel: "020-rc1" 
-						sse		=>	'serial_nr',		#R# Seriennummer als %06d formatierte Zahl, Beispiel: "000001" 
-						wss		=>	'wlan_ssid',		#W# WLAN SSID Beispiel: "Mein Heimnetzwerk" 
+														# 100’000 = 1’000’000 Ws (=277Wh = 0,277kWh)
+						dwo		=>	'stop_at_num_kWh',	#W# Abschaltwert in 0.1kWh wenn stp==2, für dws Parameter,
+														# Beispiel: 105 für 10,5kWh
+														# Ladebox-Logik:  if(dwo!=0 && dws/36000>=dwo)alw=0
+						adi		=>	'amp_max16A_adapter',#R# Ladebox ist mit Adapter,0 = keiner, 1 = 16A_ADAPTER
+						uby		=>	'unlocked_by_card',		#R# Nummer der RFID Karte, die Ladevorgang freigeschalten hat
+						eto		=>	'kWh_charged_total',	#R# Gesamt geladene Energiemenge in 0.1kWh (130 = 13kWh)
+						wst		=>	'wifi_state',		#R# WLAN Verbindungsstatus 3=verbunden, default=nicht verbunden
+						nrg		=>	'energy_sensors',	#R# array[15]  Array mit Werten des Strom- und Spannungssensors
+														# nrg[0]: Spannung auf L1 in Volt
+														# nrg[1]: Spannung auf L2 in Volt
+														# nrg[2]: Spannung auf L3 in Volt
+														# nrg[3]: Spannung auf N in Volt
+														# nrg[4]: Ampere auf L1 in 0.1A (123 entspricht 12,3A)
+														# nrg[5]: Ampere auf L2 in 0.1A
+														# nrg[6]: Ampere auf L3 in 0.1A
+														# nrg[7]: Leistung auf L1 in 0.1kW (36 entspricht 3,6kW)
+														# nrg[8]: Leistung auf L2 in 0.1kW
+														# nrg[9]: Leistung auf L3 in 0.1kW
+														# nrg[10]: Leistung auf N in 0.1kW
+														# nrg[11]: Leistung gesamt  in 0.01kW (360 entspricht 3,6kW)
+														# nrg[12]: Leistungsfaktor auf L1 in %
+														# nrg[13]: Leistungsfaktor auf L2 in %
+														# nrg[14]: Leistungsfaktor auf L3 in %
+														# nrg[15]: Leistungsfaktor auf N in %
+
+														# App Logik::
+														# if(Math.floor(pha/8) ==1 &&
+														#  parseInt(nrg[3])>parseInt(nrg[0])){
+														#	  nrg[0]=nrg[3]
+														#	  nrg[7]=nrg[10]
+														#	  nrg[12]=nrg[15]
+														# }
+						fwv		=>	'firmware',			#R# String  Firmware Version Beispiel: "020-rc1"
+						sse		=>	'serial_nr',		#R# Seriennummer als %06d formatierte Zahl, Beispiel: "000001"
+						wss		=>	'wlan_ssid',		#W# WLAN SSID Beispiel: "Mein Heimnetzwerk"
 						wke		=>	'wlan_key',			#W# WLAN Key Beispiel: "********" für fwv oder alt "passwort"
-						wen		=>	'wifi_enabled',		#W# WLAN aktiviert 0 = deaktiviert, 1 = aktiviert 
-						tof		=>	'gmt_time_offset',		#W# Zeitzone in h f. int. Batt.-Uhr +100 (101 = GMT+1) 
-						tds		=>	'daylights_time_offset',	#W# Daylight saving time offset (Sommerzeit) in h, 
-																# Beispiel: 1 für Mitteleuropa 
-						lbr		=>	'led_brightness',		#W# LED Helligkeit von 0-255 (0 = aus, 255 = max) 
-						aho		=>	'byPrice_min_hrs_charge',	#W# Min. Anzahl h in der mit "Strompreis - automatisch" 		
-																# geladen werden muss 
-																# Beispiel: 2 ("Auto ist nach 2 Stunden voll genug") 
-						afi		=>	'byPrice_till_oclock_charge',		#W# Stunde (Uhrzeit) in der mit "Strompreis - automatisch" die 
+						wen		=>	'wifi_enabled',		#W# WLAN aktiviert 0 = deaktiviert, 1 = aktiviert
+						tof		=>	'gmt_time_offset',		#W# Zeitzone in h f. int. Batt.-Uhr +100 (101 = GMT+1)
+						tds		=>	'daylights_time_offset',	#W# Daylight saving time offset (Sommerzeit) in h,
+																# Beispiel: 1 für Mitteleuropa
+						lbr		=>	'led_brightness',		#W# LED Helligkeit von 0-255 (0 = aus, 255 = max)
+						aho		=>	'byPrice_min_hrs_charge',	#W# Min. Anzahl h in der mit "Strompreis - automatisch"
+																# geladen werden muss
+																# Beispiel: 2 ("Auto ist nach 2 Stunden voll genug")
+						afi		=>	'byPrice_till_oclock_charge',		#W# Stunde (Uhrzeit) in der mit "Strompreis - automatisch" die
 														# Ladung mindestens aho Stunden gedauert haben muss.
-														# Beispiel: 7 ("Fertig bis 7:00, also davor mindestens 2 Stunden geladen") 
-						azo		=>	'aWattar_zone',		#W# Awattar Preiszone 0: Österreich 1: Deutschland 
-						ama		=>	'amp_max_wallbox',			#W#Absolute max. Amp. (physisches Anlagen-Limit, z.b. 20) 
-						al1		=>	'amp_lvl01',		#W# Ampere Level 1 f. Knopf, 6-32 (A), 0= überspringen 
-						al2		=>	'amp_lvl02',		#W# Ampere Level 2 für Druckknopf am Gerät: 0 oder > al1 
-						al3		=>	'amp_lvl03',		#W# Ampere Level 3 für Druckknopf am Gerät: 0 oder > al2 
+														# Beispiel: 7 ("Fertig bis 7:00, also davor mindestens 2 Stunden geladen")
+						azo		=>	'aWattar_zone',		#W# Awattar Preiszone 0: Österreich 1: Deutschland
+						ama		=>	'amp_max_wallbox',			#W#Absolute max. Amp. (physisches Anlagen-Limit, z.b. 20)
+						al1		=>	'amp_lvl01',		#W# Ampere Level 1 f. Knopf, 6-32 (A), 0= überspringen
+						al2		=>	'amp_lvl02',		#W# Ampere Level 2 für Druckknopf am Gerät: 0 oder > al1
+						al3		=>	'amp_lvl03',		#W# Ampere Level 3 für Druckknopf am Gerät: 0 oder > al2
 						al4		=>	'amp_lvl04',		#W# Ampere Level 4 für Druckknopf am Gerät: 0 oder > al3
-						al5		=>	'amp_lvl05',		#W# Ampere Level 5 für Druckknopf am Gerät: 0 oder > al4 
-						cid		=>	'led_color_idle',	#W# Color idle: Farbe Standby kein Auto, def. 65535 (blau/grün) 
-						cch		=>	'led_color_chg',	#W# Color charging: Farbe für Laden, def. 255 (blau) 
-						cfi		=>	'led_color_fin',	#W# Color idle: Farbe Laden beendet,def. 65280(grün) 
+						al5		=>	'amp_lvl05',		#W# Ampere Level 5 für Druckknopf am Gerät: 0 oder > al4
+						cid		=>	'led_color_idle',	#W# Color idle: Farbe Standby kein Auto, def. 65535 (blau/grün)
+						cch		=>	'led_color_chg',	#W# Color charging: Farbe für Laden, def. 255 (blau)
+						cfi		=>	'led_color_fin',	#W# Color idle: Farbe Laden beendet,def. 65280(grün)
 						lse		=>	'led_save_energy',	#W# LED nach 10 Sekunden abschalten ja = 1, nein = 0
 														# funktioniert so nicht, r2x= nutzen !
 						ust		=>	'cable_lock_state_at_box', #W# Kabelverriegelung: immer = 0, nur Laden =1
-														# 2: Kabel immer verriegelt lassen 
-						wak		=>	'ap_password',		#W# WLAN Hotspot Password Beispiel: "abdef0123456" 
-						r1x		=>	'wifi_flags',		#W# Flags 0b1: HTTP Api im WLAN akt. (0: nein, 1:ja) 0b10: 
-														# Ende-zu-Ende Verschl. akt. (0: nein, 1:ja) 
-						dto		=>	'byPrice_remain_hrs_start_charge',	#W# Restzeit in ms verbleibend auf Aktiv. durch Strompreise 
-														# App-logik:  
-														# if(json.car==1)message = "Zuerst Auto anstecken" 
-														# else message = "Restzeit:  … " 
-						nmo		=>	'norway_mode',		#W# Erdungserk. aktiv= 0, Norway Mode (nurIt-Netze) = deakt = 1 
+														# 2: Kabel immer verriegelt lassen
+						wak		=>	'ap_password',		#W# WLAN Hotspot Password Beispiel: "abdef0123456"
+						r1x		=>	'wifi_flags',		#W# Flags 0b1: HTTP Api im WLAN akt. (0: nein, 1:ja) 0b10:
+														# Ende-zu-Ende Verschl. akt. (0: nein, 1:ja)
+						dto		=>	'byPrice_remain_hrs_start_charge',	#W# Restzeit in ms verbleibend auf Aktiv. durch Strompreise
+														# App-logik:
+														# if(json.car==1)message = "Zuerst Auto anstecken"
+														# else message = "Restzeit:  … "
+						nmo		=>	'norway_mode',		#W# Erdungserk. aktiv= 0, Norway Mode (nurIt-Netze) = deakt = 1
 						eca		=>	'energy_card01', 	#R#  Geladene Energiemenge pro RFID Karte von 1-10
 						ecr		=>	'energy_card02',		# Beispiel: eca==1400: 140kWh auf Karte 1 geladen
 						ecd		=>	'energy_card03', 	# Beispiel: ec7==1400: 140kWh auf Karte 7 geladen
 						ec4		=>	'energy_card04', 	# Beispiel: ec1==1400: 140kWh auf Karte 10 geladen
-						ec5		=>	'energy_card05', 
-						ec6		=>	'energy_card06', 
-						ec7		=>	'energy_card07', 
-						ec8		=>	'energy_card08', 
-						ec9		=>	'energy_card09', 
-						ec1		=>	'energy_card10', 
+						ec5		=>	'energy_card05',
+						ec6		=>	'energy_card06',
+						ec7		=>	'energy_card07',
+						ec8		=>	'energy_card08',
+						ec9		=>	'energy_card09',
+						ec1		=>	'energy_card10',
 						rca 	=>	'id_card01',		#R# String  RFID Karte ID von 1-10 als String
-						rcr 	=>	'id_card02', 
-						rcd 	=>	'id_card03', 
-						rc4 	=>	'id_card04', 
-						rc5 	=>	'id_card05', 
-						rc6 	=>	'id_card06', 
-						rc7 	=>	'id_card07', 
-						rc8 	=>	'id_card08', 
-						rc9 	=>	'id_card09', 
-						rc1 	=>	'id_card10', 
+						rcr 	=>	'id_card02',
+						rcd 	=>	'id_card03',
+						rc4 	=>	'id_card04',
+						rc5 	=>	'id_card05',
+						rc6 	=>	'id_card06',
+						rc7 	=>	'id_card07',
+						rc8 	=>	'id_card08',
+						rc9 	=>	'id_card09',
+						rc1 	=>	'id_card10',
 						rna 	=>	'name_card01',		#W# String  RFID Karte Name von 1-10, Maximallänge: 10 Zeichen
-						rnm 	=>	'name_card02', 
-						rne 	=>	'name_card03', 
-						rn4 	=>	'name_card04', 
-						rn5 	=>	'name_card05', 
-						rn6 	=>	'name_card06', 
-						rn7 	=>	'name_card07', 
-						rn8 	=>	'name_card08', 
-						rn9 	=>	'name_card09', 
-						rn1 	=>	'name_card10', 
-						tme 	=>	'clock_time',		#R# String  Akt. Uhrzeit, formatiert als ddmmyyhhmm 
-						sch 	=>	'schedule',			#R# String  Scheduler einstellungen (base64 encodiert) 
-														# Funktionen zum encodieren und decodieren gibt es hier: 
+						rnm 	=>	'name_card02',
+						rne 	=>	'name_card03',
+						rn4 	=>	'name_card04',
+						rn5 	=>	'name_card05',
+						rn6 	=>	'name_card06',
+						rn7 	=>	'name_card07',
+						rn8 	=>	'name_card08',
+						rn9 	=>	'name_card09',
+						rn1 	=>	'name_card10',
+						tme 	=>	'clock_time',		#R# String  Akt. Uhrzeit, formatiert als ddmmyyhhmm
+						sch 	=>	'schedule',			#R# String  Scheduler einstellungen (base64 encodiert)
+														# Funktionen zum encodieren und decodieren gibt es hier:
 														# https://gist.github.com/peterpoetzi/6cd2fad2a915a2498776912c5a
-														# a137a8 
-														# Die Einstellungen können so gesetzt werden: 
-														# r21=Math.floor(encode(1)) 
-														# r31=Math.floor(encode(2)) 
-														# r41=Math.floor(encode(3)) 
-														# Ein direktes Setzen von sch= wird nicht unterstützt 
-						sdp  	=>	'sched_dbl_press', 	#R#  Scheduler double press: Aktiviert Ladung nach 
+														# a137a8
+														# Die Einstellungen können so gesetzt werden:
+														# r21=Math.floor(encode(1))
+														# r31=Math.floor(encode(2))
+														# r41=Math.floor(encode(3))
+														# Ein direktes Setzen von sch= wird nicht unterstützt
+						sdp  	=>	'sched_dbl_press', 	#R#  Scheduler double press: Aktiviert Ladung nach
 														# doppeltem Drücken des Button, wenn die Ladung
-														# gerade durch den Scheduler unterbrochen wurde 0: Funktion deakt. 1: Ladung sofort erlauben 
+														# gerade durch den Scheduler unterbrochen wurde 0: Funktion deakt. 1: Ladung sofort erlauben
 						upd 	=>	'update_available', #(R)# Update avail. (nur über go-e Server),0 = nein, 1 = ja
-						cdi 	=>	'cloud_disabled',	#W# Cloud disabled 0: cloud enabled 1: cloud disabled 
-						loe  	=>	'load_mgmt_cloud', 	#W# Lastmanagement enabled 0=deakt., 1= über Cloud akt. 
-						lot 	=>	'load_mgmt_grpamp',  #W# Lastmanagement Gruppe Total Ampere 
-						lom 	=>	'load_mgmt_minamp', #W# Lastmanagement minimale Amperezahl 
-						lop 	=>	'load_mgmt_prio', 	#W# Lastmanagement Priorität 
-						log 	=>	'load_mgmt_grp',	#W# Lastmanagement Gruppen ID 
-						lon 	=>	'load_mgmt_num',	#W# Lastmanagement: erw. Anz. Ladestationen (nicht unterstützt) 
-						lof 	=>	'load_mgmt_fallbckamp', #W# Lastmanagement Fallback Amperezahl 
+						cdi 	=>	'cloud_disabled',	#W# Cloud disabled 0: cloud enabled 1: cloud disabled
+						loe  	=>	'load_mgmt_cloud', 	#W# Lastmanagement enabled 0=deakt., 1= über Cloud akt.
+						lot 	=>	'load_mgmt_grpamp',  #W# Lastmanagement Gruppe Total Ampere
+						lom 	=>	'load_mgmt_minamp', #W# Lastmanagement minimale Amperezahl
+						lop 	=>	'load_mgmt_prio', 	#W# Lastmanagement Priorität
+						log 	=>	'load_mgmt_grp',	#W# Lastmanagement Gruppen ID
+						lon 	=>	'load_mgmt_num',	#W# Lastmanagement: erw. Anz. Ladestationen (nicht unterstützt)
+						lof 	=>	'load_mgmt_fallbckamp', #W# Lastmanagement Fallback Amperezahl
 						loa 	=>	'load_mgmt_curramp',	#W# Lastmanagement Ampere (akt. erlaubter Ladestrom),
-															# vom Lastmanagement autom. gesteuert 
-						lch 	=>	'load_mgmt_sec',	#W# Lastmanagement: Sekunden seit letzten Stromfluss bei noch 
-														# angestecktem Auto (0 wenn Ladevorgang) 
-						mce 	=>	'mqtt_enabled',		#W# Verbindung mit eigenen MQTT Server herstellen 
-														# 0: Funktion deaktiviert 1: Funktion aktiviert 
-						mcs 	=>	'mqtt_srv',			#W# String(63) MQTT custom Server, Hostname ohne 
-														# Protokollangabe (z.B. test.mosquitto.org) 
+															# vom Lastmanagement autom. gesteuert
+						lch 	=>	'load_mgmt_sec',	#W# Lastmanagement: Sekunden seit letzten Stromfluss bei noch
+														# angestecktem Auto (0 wenn Ladevorgang)
+						mce 	=>	'mqtt_enabled',		#W# Verbindung mit eigenen MQTT Server herstellen
+														# 0: Funktion deaktiviert 1: Funktion aktiviert
+						mcs 	=>	'mqtt_srv',			#W# String(63) MQTT custom Server, Hostname ohne
+														# Protokollangabe (z.B. test.mosquitto.org)
 						mcp 	=>	'mqtt_port',		#W# MQTT custom Port z.B. 1883
-						mcu 	=>	'mqtt_user',		#W# String(16) MQTT custom Username 
-						mck 	=>	'mqtt_key',			#W# String(16) MQTT custom key,Für MQTT Authentifizierung 
+						mcu 	=>	'mqtt_user',		#W# String(16) MQTT custom Username
+						mck 	=>	'mqtt_key',			#W# String(16) MQTT custom key,Für MQTT Authentifizierung
 						mcc 	=>	'mqtt_rdy',			#W# MQTT custom connected 0 = nicht verbunden 1 = verbunden
 						amt		=>	'amp_limit_by_temp',# max Strom limitiert durch Temp im Charger
 						tma		=>	'curr_sense_Typ2',		# Array 0,1,2,3,4 Stromsensoren Typ2
 						txi		=>	'transmit_interface',		# unknown
-					);				
+					);
 # lesbare Parameter: siehe oben Kommentarstart mit #R#
 # Lesen: Method  GET (liefert JSON)
-# Beispiel: http://192.168.4.1/status 
+# Beispiel: http://192.168.4.1/status
 
-# Setzbare Parameter: siehe oben Kommentarstart #W# 
-# Setzen: Method  Payload, SET,  [param]=[value] 
+# Setzbare Parameter: siehe oben Kommentarstart #W#
+# Setzen: Method  Payload, SET,  [param]=[value]
 # Beispiel:  http://192.168.4.1/mqtt?payload=amp=16
-   
+
 $reading_keys_json_all= join(' ', keys(%goevar));
 $reading_keys_json_default='adi afi aho alw ama amp amt ast car cbl cch cdi cfi cid dwo dws err eto lbr lch loa loe lof log lom lop lot lse tmp ust pha wak';
 $reading_keys_json_minimal='alw amp ast car dws err eto ust';
@@ -255,22 +254,22 @@ my %paths = (	'status'	=> '/status'
 sub GoECharger_Initialize($) {
 
     my ($hash) = @_;
-    
+
     # Consumer
     $hash->{GetFn}      = "GoECharger_Get";
     $hash->{SetFn}      = "GoECharger_Set";
     $hash->{DefFn}      = "GoECharger_Define";
     $hash->{UndefFn}    = "GoECharger_Undef";
     $hash->{NotifyFn}   = "GoECharger_Notify";
-    
+
     $hash->{AttrFn}     = "GoECharger_Attr";
     $hash->{AttrList}   = "interval ".
                           "disable:1 ".
 						  "used_api_keys ".
                           $readingFnAttributes;
-    
+
     foreach my $d(sort keys %{$modules{GoECharger}{defptr}}) {
-    
+
         my $hash = $modules{GoECharger}{defptr}{$d};
         $hash->{VERSION}      = $version;
     }
@@ -279,14 +278,14 @@ sub GoECharger_Initialize($) {
 sub GoECharger_Define($$) {
 
     my ( $hash, $def ) = @_;
-    
+
     my @a = split( "[ \t][ \t]*", $def );
-   
+
     return "too few parameters: define <name> GoECharger <HOST>" if( @a != 3);
     return "Cannot define a GoECharger device. Perl modul $missingModul is missing." if ( $missingModul );
-    
+
     my $name                = $a[0];
-    
+
     my $host                = $a[2];
     $hash->{HOST}           = $host;
     $hash->{INTERVAL}       = 60;
@@ -294,12 +293,12 @@ sub GoECharger_Define($$) {
     $hash->{NOTIFYDEV}      = "global";
     $hash->{ActionQueue}    = [];
 
-    
+
     CommandAttr(undef,$name.' room Energie');# if ( AttrVal($name,'room','') ne '' );
     Log3 $name, 3, "GoECharger ($name) - defined GoECharger Device with Host $host and Interval $hash->{INTERVAL}"; #Port $hash->{PORT}
-    
+
     $modules{GoECharger}{defptr}{HOST} = $hash;
-	
+
 	# API related internals and attrib
 	GoECharger_API_V15($hash);
 	$hash->{USED_API_KEYS}	= $reading_keys_json_default;
@@ -313,7 +312,7 @@ sub GoECharger_Define($$) {
 sub GoECharger_Undef($$) {
 
     my ( $hash, $arg )  = @_;
-    
+
     my $name            = $hash->{NAME};
 
 
@@ -334,26 +333,26 @@ sub GoECharger_Attr(@) {
             RemoveInternalTimer($hash);
             readingsSingleUpdate ( $hash, "state", "disabled", 1 );
             Log3 $name, 3, "GoECharger ($name) - disabled";
-        
+
         } elsif( $cmd eq "del" ) {
             Log3 $name, 3, "GoECharger ($name) - enabled";
         }
     }
-    
+
     if( $attrName eq "disabledForIntervals" ) {
         if( $cmd eq "set" ) {
             return "check disabledForIntervals Syntax HH:MM-HH:MM or 'HH:MM-HH:MM HH:MM-HH:MM ...'"
             unless($attrVal =~ /^((\d{2}:\d{2})-(\d{2}:\d{2})\s?)+$/);
             Log3 $name, 3, "GoECharger ($name) - disabledForIntervals";
             readingsSingleUpdate ( $hash, "state", "disabled", 1 );
-        
+
         } elsif( $cmd eq "del" ) {
             Log3 $name, 3, "GoECharger ($name) - enabled";
             readingsSingleUpdate( $hash, "state", "active", 1 );
         }
     }
-    
-  
+
+
   if( $attrName eq "used_api_keys" ) {
         if( $cmd eq "set" ) {
 			if ($attrVal eq 'default'){
@@ -371,11 +370,11 @@ sub GoECharger_Attr(@) {
 		$hash->{USED_API_KEYS}	= $reading_keys_json;
 		# delete all readings
 		{fhem ("deletereading $name .*")};
-		
+
 		return 'There are still path commands in the action queue'
 			if( defined($hash->{ActionQueue}) and scalar(@{$hash->{ActionQueue}}) > 0 );
 		unshift( @{$hash->{ActionQueue}}, 'status' );
-		GoECharger_GetData($hash);			
+		GoECharger_GetData($hash);
     }
 
 	if( $attrName eq "interval" ) {
@@ -383,7 +382,7 @@ sub GoECharger_Attr(@) {
             if( $attrVal < 5 ) {
                 Log3 $name, 3, "GoECharger ($name) - interval too small, please use something >= 5 (sec), default is 60 (sec)";
                 return "interval too small, please use something >= 5 (sec), default is 60 (sec)";
-            
+
             } else {
                 RemoveInternalTimer($hash);
                 $hash->{INTERVAL} = $attrVal;
@@ -397,7 +396,7 @@ sub GoECharger_Attr(@) {
             GoECharger_Timer_GetData($hash);
         }
     }
-    
+
     return undef;
 }
 
@@ -406,7 +405,7 @@ sub GoECharger_Notify($$) {
     my ($hash,$dev) = @_;
     my $name = $hash->{NAME};
     return if (IsDisabled($name));
-    
+
     my $devname = $dev->{NAME};
     my $devtype = $dev->{TYPE};
     my $events = deviceEvents($dev,1);
@@ -420,20 +419,20 @@ sub GoECharger_Notify($$) {
 }
 
 sub GoECharger_Get($@) {
-    
+
     my ($hash, $name, $cmd) = @_;
     my $arg;
 
     if( $cmd eq 'status' ) {
         $arg    = lc($cmd);
-    } else {  
-        my $list = 'status:noArg';       
+    } else {
+        my $list = 'status:noArg';
         return "Unknown argument $cmd, choose one of $list";
     }
-    
+
     return 'There are still path commands in the action queue'
     if( defined($hash->{ActionQueue}) and scalar(@{$hash->{ActionQueue}}) > 0 );
-    
+
     unshift( @{$hash->{ActionQueue}}, $arg );
     GoECharger_GetData($hash);
 
@@ -441,18 +440,18 @@ sub GoECharger_Get($@) {
 }
 
 sub GoECharger_Set($@) {
-    
+
     my ($hash, $name, $cmd, $arg) = @_;
     my $queue_cmd='';
 	my $setpath='mqtt?payload='; #amp=7
-	
+
     if( $cmd eq 'allow_charging' ) {
 		if (($arg == 0) or ($arg==1)){
 			$queue_cmd  = $setpath.'alw='.$arg;
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
     }elsif( $cmd eq 'amp_current_eeprom' ) {
 		if (($arg >= 6) and ($arg<=$maxamp)){
 			$queue_cmd  = $setpath.'amp='.$arg;
@@ -460,7 +459,7 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-				
+
     }elsif( $cmd eq 'amp_current' ) {
 		if (($arg >= 6) and ($arg<=$maxamp)){
 			$queue_cmd  = $setpath.'amx='.$arg;
@@ -473,35 +472,35 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
     }elsif( $cmd eq 'led_brightness' ) {
 		if (($arg >= 0) and ($arg<=255)){
 			$queue_cmd  = $setpath.'lbr='.$arg;
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
     }elsif( $cmd eq 'led_color_idle' ) {
 		if ($arg ne ''){
 			$queue_cmd  = $setpath.'cid='.hex($arg);
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
     }elsif( $cmd eq 'led_color_charge' ) {
 		if ($arg ne ''){
 			$queue_cmd  = $setpath.'cch='.hex($arg);
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
     }elsif( $cmd eq 'led_color_finish' ) {
 		if ($arg ne ''){
 			$queue_cmd  = $setpath.'cfi='.hex($arg);
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
 	}elsif( $cmd eq 'led_save_energy' ) {
 		if (($arg == 0) or ($arg==1)){
 			$queue_cmd  = $setpath.'r2x='.$arg; #r2x instead of lse
@@ -536,7 +535,7 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-	
+
 	}elsif( $cmd eq 'byPrice_till_oclock_charge' ) {
 		if (($arg >= 0) and ($arg<=24)){
 			$queue_cmd  = $setpath.'afi='.$arg;
@@ -550,7 +549,7 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
 	}elsif( $cmd eq 'amp_max_wallbox' ) {
 		if (($arg >= 6) and ($arg<=32)){
 			$queue_cmd  = $setpath.'ama='.$arg;
@@ -571,14 +570,14 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
 	}elsif( $cmd eq 'load_mgmt_grpamp' ) {
 		if (($arg >= 6) and ($arg<=32)){
 			$queue_cmd  = $setpath.'lot='.$arg;
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
 	}elsif( $cmd eq 'load_mgmt_minamp' ) {
 		if (($arg >= 6) and ($arg<=32)){
 			$queue_cmd  = $setpath.'lom='.$arg;
@@ -599,7 +598,7 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
 	}elsif( $cmd eq 'load_mgmt_fallbckamp' ) {
 		if ((($arg >= 6) and ($arg<=16)) or ($arg==0)){
 			$queue_cmd  = $setpath.'lof='.$arg;
@@ -613,17 +612,17 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-		
+
     } else {
-    
-        my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp payload";  
-        
+
+        my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp payload";
+
         return "Unknown argument $cmd, choose one of $list";
     }
-    
+
     return 'There are still path commands in the action queue'
     if( defined($hash->{ActionQueue}) and scalar(@{$hash->{ActionQueue}}) > 0 );
-    
+
     unshift( @{$hash->{ActionQueue}}, $queue_cmd) if ($queue_cmd ne '');
     GoECharger_GetData($hash);
 
@@ -642,14 +641,14 @@ sub GoECharger_Timer_GetData($) {
             while( my $obj = each %paths ) {
                 unshift( @{$hash->{ActionQueue}}, $obj );
             }
-        
+
             GoECharger_GetData($hash);
-        
+
         } else {
             readingsSingleUpdate($hash,'Http_state','disabled',1);
         }
     }
-    
+
     InternalTimer( gettimeofday()+$hash->{INTERVAL}, 'GoECharger_Timer_GetData', $hash );
     Log3 $name, 4, "GoECharger ($name) - Call InternalTimer GoECharger_Timer_GetData";
 }
@@ -657,7 +656,7 @@ sub GoECharger_Timer_GetData($) {
 sub GoECharger_GetData($) {
 
     my ($hash)          = @_;
-    
+
     my $name            = $hash->{NAME};
     my $host            = $hash->{HOST};
     my $path            = pop( @{$hash->{ActionQueue}} );
@@ -676,37 +675,37 @@ sub GoECharger_GetData($) {
             callback    => \&GoECharger_ErrorHandling,
         }
     );
-    
+
     Log3 $name, 4, "GoECharger ($name) - Send with URI: http://$uri (host: $host, path: $path )";
 }
 
 sub GoECharger_ErrorHandling($$$) {
 
     my ($param,$err,$data)  = @_;
-    
+
     my $hash                = $param->{hash};
     my $name                = $hash->{NAME};
 
 
     ### Begin Error Handling
-    
+
     if( defined( $err ) ) {
         if( $err ne "" ) {
-        
+
             readingsBeginUpdate( $hash );
             readingsBulkUpdate( $hash, 'Http_state', $err, 1);
             readingsBulkUpdate( $hash, 'Http_lastRequestError', $err, 1 );
             readingsEndUpdate( $hash, 1 );
-            
+
             Log3 $name, 3, "GoECharger ($name) - RequestERROR: $err";
-            
+
             $hash->{ActionQueue} = [];
             return;
         }
     }
 
     if( $data eq "" and exists( $param->{code} ) && $param->{code} ne 200 ) {
-    
+
         readingsBeginUpdate( $hash );
         readingsBulkUpdate( $hash, 'Http_state', $param->{code}, 1 );
 
@@ -715,41 +714,41 @@ sub GoECharger_ErrorHandling($$$) {
         Log3 $name, 3, "GoECharger ($name) - RequestERROR: ".$param->{code};
 
         readingsEndUpdate( $hash, 1 );
-    
+
         Log3 $name, 5, "GoECharger ($name) - RequestERROR: received http code ".$param->{code}." without any data after requesting";
 
         $hash->{ActionQueue} = [];
         return;
     }
 
-    if( ( $data =~ /Error/i ) and exists( $param->{code} ) ) { 
-    
+    if( ( $data =~ /Error/i ) and exists( $param->{code} ) ) {
+
         readingsBeginUpdate( $hash );
-        
+
         readingsBulkUpdate( $hash, 'Http_state', $param->{code}, 1 );
         readingsBulkUpdate( $hash, "Http_lastRequestError", $param->{code}, 1 );
 
         readingsEndUpdate( $hash, 1 );
-    
+
         Log3 $name, 3, "GoECharger ($name) - http error ".$param->{code};
 
         $hash->{ActionQueue} = [];
         return;
         ### End Error Handling
     }
-    
+
     GoECharger_GetData($hash)
     if( defined($hash->{ActionQueue}) and scalar(@{$hash->{ActionQueue}}) > 0 );
-    
+
     Log3 $name, 4, "GoECharger ($name) - Recieve JSON data: $data";
-    
+
     GoECharger_ResponseProcessing($hash,$param->{setCmd},$data);
 }
 
 sub GoECharger_ResponseProcessing($$$) {
 
     my ($hash,$path,$json)        = @_;
-    
+
     my $name                = $hash->{NAME};
     my $decode_json;
     my $responsedata;
@@ -764,19 +763,19 @@ sub GoECharger_ResponseProcessing($$$) {
         readingsEndUpdate($hash,1);
         return;
     }
-    
+
     #### Verarbeitung der Readings zum passenden Path
-    
+
     $responsedata = $decode_json;
     GoECharger_WriteReadings($hash,$path,$responsedata);
 }
 
 sub GoECharger_WriteReadings($$$) {
 
-    my ($hash,$path,$responsedata)    = @_;    
-    my $name = $hash->{NAME};    
+    my ($hash,$path,$responsedata)    = @_;
+    my $name = $hash->{NAME};
     Log3 $name, 4, "GoECharger ($name) - Write Readings";
-    
+
     my $newreadingname;
 	my $tmpr;
 	my $tmpv;
@@ -785,7 +784,7 @@ sub GoECharger_WriteReadings($$$) {
 	$reading_keys_json=$hash->{USED_API_KEYS};
 	my @reading_keys=split(/ /,$reading_keys_json);
     readingsBeginUpdate($hash);
-	
+
 	# walkthrough received key - value pairs
     while( my ($r,$v) = each %{$responsedata} ) {
 		$newreadingname=$goevar{$r};
@@ -793,10 +792,10 @@ sub GoECharger_WriteReadings($$$) {
 		$newreadingname = makeReadingName($newreadingname);
 		if ($r eq 'eto'){
 			$v=sprintf("%.1f",$v/10);
-			
+
 		}elsif($r eq 'dws'){
 			$v=sprintf("%.1f",$v/360000);
-			
+
 		}elsif($r eq 'ast'){
 			if ($v==0){
 				$tmpv='access_open';
@@ -805,11 +804,11 @@ sub GoECharger_WriteReadings($$$) {
 			}else{ #($v==1)
 				$tmpv='by_RFID_or_App';
 			}
-			$v=$tmpv; 
-			
+			$v=$tmpv;
+
 		}elsif($r eq 'dwo'){
 			$v=$v/10;
-			
+
 		}elsif($r eq 'dto'){
 			$v=sprintf("%.2f",$v/3600000);
 
@@ -819,22 +818,22 @@ sub GoECharger_WriteReadings($$$) {
 			$numphases +=1 if (($v & 16)==16);
 			$numphases +=1 if (($v & 32)==32);
 			$v=sprintf("%b",$v); #show binary
-						
+
 		}elsif($r eq 'cid'){
 			$v=sprintf("%06X",$v);
-			
+
 		}elsif($r eq 'cch'){
 			$v=sprintf("%06X",$v);
-			
+
 		}elsif($r eq 'cfi'){
 			$v=sprintf("%06X",$v);
-						
+
 		}elsif($r eq 'nrg'){
 			my @vtmp=@{$responsedata->{'nrg'}};
 			$tmpr='KW_charging_measured';
 			$tmpv=sprintf("%.2f",$vtmp[11]/100);
 			readingsBulkUpdate($hash,$tmpr,$tmpv);
-		
+
 		}elsif($r eq 'ust'){
 			if ($v==0){
 				$tmpv='while_car_present';
@@ -843,16 +842,16 @@ sub GoECharger_WriteReadings($$$) {
 			}else{ #($v==2)
 				$tmpv='locked_always';
 			}
-			$v=$tmpv; 
-		}		
-				
+			$v=$tmpv;
+		}
+
 		# test if $r is known at @reading_keys and create reading ...
 		my %rkeys = map { $_, 1 } @reading_keys;
 		if( $rkeys{ $r } ){
 			readingsBulkUpdate($hash,$newreadingname,$v);
 		}
     }
-	
+
 	# calculate available power at 230V~
     readingsBulkUpdate($hash,'KW_preset_calculated',sprintf("%.2f",($responsedata->{amp})*$numphases*0.230)) if(defined($responsedata->{amp}));
 
@@ -877,8 +876,8 @@ sub GoECharger_WriteReadings($$$) {
     # define $maxamp by wallbox 'ama', cable 'cbl', adapter 'adi'
 	$maxamp = sprintf("%d",($responsedata->{ama}));
 	my $tmpcbl = sprintf("%d",($responsedata->{cbl}));
-	$maxamp = $tmpcbl if($tmpcbl != 0 and $tmpcbl < $maxamp); 
-	$maxamp = 16 if(sprintf("%d",($responsedata->{adi}))==1 and $maxamp > 16);		
+	$maxamp = $tmpcbl if($tmpcbl != 0 and $tmpcbl < $maxamp);
+	$maxamp = 16 if(sprintf("%d",($responsedata->{adi}))==1 and $maxamp > 16);
 	#readingsBulkUpdate($hash,'Maxamp',$maxamp);
 
 
@@ -886,7 +885,7 @@ sub GoECharger_WriteReadings($$$) {
 		$tmpstate='error';
 	}
 	readingsBulkUpdate($hash,'state',$tmpstate);
-	
+
     #readingsBulkUpdateIfChanged($hash,'ActionQueue',scalar(@{$hash->{ActionQueue}}) . ' entries in the Queue');
     readingsBulkUpdateIfChanged($hash,'Http_state',(defined($hash->{ActionQueue}) and scalar(@{$hash->{ActionQueue}}) == 0 ? 'ready' : 'fetch data - ' . scalar(@{$hash->{ActionQueue}}) . ' paths in ActionQueue'));
     readingsEndUpdate($hash,1);
@@ -935,7 +934,7 @@ sub GoECharger_WriteReadings($$$) {
 			<li>KW_charging_measured      - measured power (kW), derived from 'nrg' array</li>
 			<li>KW_preset_calculated      - calculated power (kW), calculated with phases, amp and 230V</li>
 			<li>Saved_amp_current_eeprom  - last current (A) setting at fhem with storing at eeprom (may be changed by app or others)</li>
-		<br>	
+		<br>
 		The following JSON API keys are known and generate a readingname.<br>
 		API-Key = readingname (description):<br>
 		-------------------------------------------------------<br>
@@ -950,7 +949,7 @@ sub GoECharger_WriteReadings($$$) {
         <li>alw = allow_charging&nbsp&nbsp&nbsp&nbsp(0=activate otherwise...see 'ast', 1=activate manual)</li>
         <li>ama = amp_max_wallbox &nbsp&nbsp&nbsp&nbsp(house related limit <=32A)</li>
         <li>amp = amp_current	&nbsp&nbsp&nbsp&nbsp(the actual charge current per phase)</li>
-        <li>amt = amp_limit_by_temp &nbsp&nbsp&nbsp&nbsp(controller may limit charge current, otherwise max is 32A)</li> 
+        <li>amt = amp_limit_by_temp &nbsp&nbsp&nbsp&nbsp(controller may limit charge current, otherwise max is 32A)</li>
         <li>ast = access_control_state &nbsp&nbsp&nbsp&nbsp(access_open,by_RFID_or_App,price_or_auto)</li>
         <li>azo = aWattar_zone &nbsp&nbsp&nbsp&nbsp(aWattar price zone 0 = Austria, 1 = Germany)</li>
         <li>car = car_state	&nbsp&nbsp&nbsp&nbsp(1 = ready_no_car, 2 = charging, 3 =  waiting_for_car, 4 = finished)</li>
@@ -1058,7 +1057,7 @@ sub GoECharger_WriteReadings($$$) {
 		<li>load_mgmt_cloud				- set load management via cloud enabled (1) or disabled (0)</li> <li>load_mgmt_grpamp			 - set allowed total current for all wallboxes within load_mgmt_grp (6...32A)</li> <li>load_mgmt_minamp			   - set minimum load_mgmt current neccessary for this wallbox or car (6...16A, Zoe may be 10A!)</li>
 		<li>load_mgmt_prio 				- set load_mgmt priority for this box from high to low (1...99)</li>
 		<li>load_mgmt_grp 				- load_mgmt group ID (string>8, see App) to identify same group</li> <li>load_mgmt_fallbckamp		 - fallback current of box if cloud load_mgmt not available (CHECK your installation to prevent overload (0=never use it, else 6...16A)</li>
-		<li>payload 				    - for test or more: set known API keys (e.g. alw=1), be sure what you do </li> 
+		<li>payload 				    - for test or more: set known API keys (e.g. alw=1), be sure what you do </li>
     </ul>
     <a name="GoEChargerget"></a>
     <b>get</b>
@@ -1117,7 +1116,7 @@ sub GoECharger_WriteReadings($$$) {
 			<li>KW_charging_measured      - durch Wallbox gemessene Leistung (kW), ermittelt aus API 'nrg' key</li>
 			<li>KW_preset_calculated      - aus Anzahl Phasen*Strom*230V vom Modul berechnete Ladeleistung (kW)</li>
 			<li>Saved_amp_current_eeprom  - mit entsprechendem set Befehl (der in EEPROM speichert) zuletzt geänderter Ladestrom-Wert (A), der nach Neustart der Box wieder anliegen sollte (Achtung, kann bei Nutzung der App anders sein)</li>
-		<br>	
+		<br>
 		Folgende JSON API keys sind bekannt und können als Reading genutzt werden.<br>
 		API-Key = readingname (Beschreibung):<br>
 		-------------------------------------------------------<br>
@@ -1132,7 +1131,7 @@ sub GoECharger_WriteReadings($$$) {
         <li>alw = allow_charging&nbsp&nbsp&nbsp&nbsp(Laden aktivieren, d.h. PWM Signal darf anliegen,0 = nein, 1 = ja)</li>
         <li>ama = amp_max_wallbox &nbsp&nbsp&nbsp&nbsp(Absolute max. Amp., Anlagen-Limit, z.b. 16 o. 32))</li>
         <li>amp = amp_current	&nbsp&nbsp&nbsp&nbsp(Ampere Wert für PWM Sign. in ganzen Ampere von 6-32A)</li>
-        <li>amt = amp_limit_by_temp &nbsp&nbsp&nbsp&nbsp(max Strom limitiert durch Temp im Charger)</li> 
+        <li>amt = amp_limit_by_temp &nbsp&nbsp&nbsp&nbsp(max Strom limitiert durch Temp im Charger)</li>
         <li>ast = access_control_state &nbsp&nbsp&nbsp&nbsp(Zugangskontrolle,0=Offen,1=RFID/App nötig,2= Strompr./autom.)</li>
         <li>azo = aWattar_zone &nbsp&nbsp&nbsp&nbsp(Awattar Preiszone 0: Österreich 1: Deutschland)</li>
         <li>car = car_state	&nbsp&nbsp&nbsp&nbsp(Status PWM 1 = bereit - kein Fz., 2 = Fz. lädt, 3 = Warte auf Fz., 4 = Ladung Ende - Fz. noch da)</li>
@@ -1237,11 +1236,11 @@ sub GoECharger_WriteReadings($$$) {
 		<li>byPrice_min_hrs_charge		- setze minimale Ladedauer für Laden nach Strompreis</li>
 		<li>amp_max_wallbox				- setze max Strom-Limit der Wallbox in Abhängigkeit Absicherung und Wallboxzuleitung...</li>
 		<li>ap_password					- setze wifi Passwort (6...12 Zeichen nötig)</li>
-		<li>load_mgmt_cloud				- erlaube Lastmanagement via Cloud (an=1, aus=0)</li> 
+		<li>load_mgmt_cloud				- erlaube Lastmanagement via Cloud (an=1, aus=0)</li>
 		<li>load_mgmt_grpamp			- setze erlaubten totalen Strom aller Wallboxen (gilt für alle Phasen, 6...32A)</li> <li>load_mgmt_minamp			 - setze minimal nötigen Ladestrom dieser Wallbox der Gruppe (6...16A, Zoe ggf. 10A!)</li>
 		<li>load_mgmt_prio 				- setze Prorität dieser Box in der Gruppe von hoch ... niedrig (1...99)</li>
 		<li>load_mgmt_grp 				- setze die Gruppen-ID-Kennung (gleich oder größer 8 Zeichen, siehe App!)</li> <li>load_mgmt_fallbckamp		   - setze fallback Strom dieser Box wenn das Cloud Lastmanagement nicht verfügbar ist (Achtung! Überlast Installation vermeiden; 0=nicht mehr laden, sonst 6...16A)</li>
-		<li>payload 				    - für Test u.a.: setze bekannte API keys (e.g. alw=1) - überlege dir, was du eingibst</li> 		
+		<li>payload 				    - für Test u.a.: setze bekannte API keys (e.g. alw=1) - überlege dir, was du eingibst</li>
     </ul>
     <a name="GoEChargerget"></a>
     <b>get</b>
