@@ -4,7 +4,7 @@ FHEM - Modul 46_GoECharger
 
 Module purpose:
 
- - controlling go-ECharger wallboxes ( made by go-e GmbH, https://go-e.co/ ) via FHEM
+ - controlling go-ECharger wallboxes ( made by go-e® GmbH , https://go-e.co/ ) via FHEM
  - with this module it's possible to read data and set some functions of the wallbox 
    to monitor and control car battery charging
 
