@@ -26,7 +26,8 @@
 # 0.1.7 added 'set' for new payload command 'amx': sets a temorary current value instead of storing at eeprom
 # 0.1.8 payload command 'amp' renamed to 'set amp_current_eeprom' with storing at reading Saved_amp_current_eeprom
 # 0.1.9 help changed
-# 0.2.0 enhanced set commands 02.03.2021
+# 0.2.0 enhanced set commands 
+# 0.2.1 changed help and attribute "used_api_keys" (default,all,minimal) 02.03.2021
 
 
 package main;
@@ -44,7 +45,7 @@ eval "use JSON;1" or $missingModul .= "JSON ";
 my $version = "0.2.0";
 
 my %goevar;
-my $reading_keys_json_allkeys='';
+my $reading_keys_json_all='';
 my $reading_keys_json_default='';
 my $reading_keys_json_minimal='';
 my $reading_keys_json;
@@ -226,7 +227,7 @@ sub GoECharger_API_V15($) {
 # Setzen: Method  Payload, SET,  [param]=[value] 
 # Beispiel:  http://192.168.4.1/mqtt?payload=amp=16
    
-$reading_keys_json_allkeys= join(' ', keys(%goevar));
+$reading_keys_json_all= join(' ', keys(%goevar));
 $reading_keys_json_default='adi afi aho alw ama amp amt ast car cbl cch cdi cfi cid dwo dws err eto lbr lch loa loe lof log lom lop lot lse tmp ust pha wak';
 $reading_keys_json_minimal='alw amp ast car dws err eto ust';
 $reading_keys_json=$reading_keys_json_default;
@@ -359,8 +360,8 @@ sub GoECharger_Attr(@) {
 				$reading_keys_json=$reading_keys_json_default;
 			}elsif($attrVal eq 'minimal'){
 				$reading_keys_json=$reading_keys_json_minimal;
-			}elsif($attrVal eq 'allkeys'){
-				$reading_keys_json=$reading_keys_json_allkeys;
+			}elsif($attrVal eq 'all'){
+				$reading_keys_json=$reading_keys_json_all;
 			}else{
 				$reading_keys_json=$attrVal;
 			}
@@ -1109,7 +1110,7 @@ sub GoECharger_WriteReadings($$$) {
     <ul>
 		Es sind bereits Default-Readings definiert. Das 'state' Reading wird aus den JSON API keys 'car' und 'alw' ermittelt.<br>
 		Die Original "xxx" JSON API key's der API werden durch das Modul so wie unten genannt mit Text übersetzt als Reading dargestellt. <br>
-		Über das Attribut "used_api_keys" sind die zu nutzenden/anzuzeigenden Readings frei wählbar (oder man nimmt die vordefinierten Schlüsselwörter "All" oder "default" dafür).<br>
+		Über das Attribut "used_api_keys" sind die zu nutzenden/anzuzeigenden Readings frei wählbar (oder man nimmt die vordefinierten Schlüsselwörter "default", "all" oder "minimal").<br>
 		Readings mit Großbuchstaben beginnend wurden durch das Modul generiert/berechnet (nicht aus der API).<br>
 		<br>
 		    <li>Http_state      - Status der letzten HTML-Abfrage</li>
