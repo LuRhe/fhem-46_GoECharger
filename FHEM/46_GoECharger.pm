@@ -49,9 +49,10 @@ my $reading_keys_json_default='';
 my $reading_keys_json_minimal='';
 my $reading_keys_json;
 my $maxamp;
+my $kW_measured_corr_value=1;
 
 
-my $icodef='disabled.*:ev-station@darkgrey not_allowed.*:ev-station@white ready_no_car.*:ev-station@blue charging.*:ev-station@darkorange waiting_for_car.*:ev-station@pink finished.*:ev-station@lime error.*:ev-station@red .*:ev-station@yellow';
+my $icodef='disabled.*:ev_car_charger@darkgrey not_allowed.*:ev_car_charger@white ready_no_car.*:ev_car_charger@blue charging.*:ev_car_charger@darkorange waiting_for_car.*:ev_car_charger@pink finished.*:ev_car_charger@lime error.*:ev_car_charger@red';
 
 sub GoECharger_API_V15($) {
 	%goevar			=	(
@@ -266,6 +267,7 @@ sub GoECharger_Initialize($) {
     $hash->{AttrList}   = "interval ".
                           "disable:1 ".
 						  "used_api_keys ".
+						  "kW_measured_corr_value ".
                           $readingFnAttributes;
 
     foreach my $d(sort keys %{$modules{GoECharger}{defptr}}) {
@@ -305,6 +307,14 @@ sub GoECharger_Define($$) {
 	CommandAttr(undef,$name.' used_api_keys default');
 	#  generic attrib
 	CommandAttr(undef,$name.' devStateIcon '.$icodef);
+	CommandAttr(undef,$name.' event-on-change-reading '.'.*');
+	CommandAttr(undef,$name.' event-on-change-reading '.'.*');
+	CommandAttr(undef,$name.' event-on-update-reading '.'state');
+	CommandAttr(undef,$name.' eventMap '.'/allow_charging 1:on/ /allow_charging 0:off/');
+	CommandAttr(undef,$name.' stateFormat '.'state
+KW_charging_measured kW');
+	CommandAttr(undef,$name.' webCmd '.'on:off');
+	CommandAttr(undef,$name.' kW_measured_corr_value '.'1.00');
 	CommandAttr(undef,$name.' interval '.$hash->{INTERVAL});
     return undef;
 }
@@ -339,7 +349,23 @@ sub GoECharger_Attr(@) {
         }
     }
 
-    if( $attrName eq "disabledForIntervals" ) {
+    if( $attrName eq "kW_measured_corr_value" ) {
+        if( $cmd eq "set") {
+           if( $attrVal > 1.5 or $attrVal <0.5) {
+                Log3 $name, 3, "GoECharger ($name) - kW_measured_corr_value: please use something between 0.5 ... 1.5";
+                return "kW_measured_corr_value: please use something between 0.5 ... 1.5";
+            } else {
+                $kW_measured_corr_value = $attrVal;
+                Log3 $name, 3, "GoECharger ($name) - set kW_measured_corr_value to $attrVal";
+            }
+	    } elsif( $cmd eq "del" ) {
+			$kW_measured_corr_value = 1;
+            Log3 $name, 3, "GoECharger ($name) - kW_measured_corr_value reset to 1";
+        }
+
+    }
+   
+   if( $attrName eq "disabledForIntervals" ) {
         if( $cmd eq "set" ) {
             return "check disabledForIntervals Syntax HH:MM-HH:MM or 'HH:MM-HH:MM HH:MM-HH:MM ...'"
             unless($attrVal =~ /^((\d{2}:\d{2})-(\d{2}:\d{2})\s?)+$/);
@@ -831,7 +857,7 @@ sub GoECharger_WriteReadings($$$) {
 		}elsif($r eq 'nrg'){
 			my @vtmp=@{$responsedata->{'nrg'}};
 			$tmpr='KW_charging_measured';
-			$tmpv=sprintf("%.2f",$vtmp[11]/100);
+			$tmpv=sprintf("%.2f",$vtmp[11]/100*$kW_measured_corr_value);
 			readingsBulkUpdate($hash,$tmpr,$tmpv);
 
 		}elsif($r eq 'ust'){
@@ -1068,6 +1094,7 @@ sub GoECharger_WriteReadings($$$) {
     <b>Attribute</b>
     <ul>
         <li>interval 					- interval in seconds for automatically fetch data (default 60, min. 5)</li>
+		<li>kW_measured_corr_value		- factor (0.5 ... 1.5, default 1) to calibrate measured kW charging (due to voltage offsets)</li>
 		<li>used_api_keys				- use predefined sets of JSON API keys which will be shown as readings: <br>
 		use predefined settings 'default', 'minimal' or 'all' ore define your own space separeted list of JSON API keys<br>
 		(see above or API reference or Internal [UsedAPIKeys] for examples).</li>
@@ -1251,6 +1278,7 @@ sub GoECharger_WriteReadings($$$) {
     <b>Attribute</b>
     <ul>
         <li>interval 					- Intervall zur Datenabfrage in s (default 60, min. 5)</li>
+		<li>kW_measured_corr_value		- Faktor (0.5 ... 1.5, default 1) zum Kalibrieren gemessener kW (Spannungsmesser haben Offset)</li>
 		<li>used_api_keys				- wähle auszuwertende API keys für Readings: <br>
 		entweder vordefiniert (Schlüsselwort: default, minimal, all) oder Leerzeichen getrennte Liste API keys<br>
 		(s.oben oder unter Define das entsprechende internal; temp. Löschen aller Readings in Fhem über Befehl 'deletereading <device> .*').</li>
