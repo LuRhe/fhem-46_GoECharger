@@ -45,7 +45,7 @@ Last changes:
 
 - Attribute 'used_api_keys' and related code & help corrected  to the keywors default, minimal, all.
 - Now the icon ev_car_charger.svg (see files!!) is predefined as devStateIcon. Please copy this to your folder ...\www\images\fhemSVG\ or use another (btw. delete the attribute). 
-- To correct the kW_charging_measured value (there are uncalibrated voltage meter IC) I've implemented a attribute "kW_measured_corr_value" as factor (often between 1.03 ... 1.07). You may measure the real charging power consumption with car or external power meter to determine a value other than the default 1 (if needed).
+- To correct the kW_charging_measured value (there are uncalibrated voltage meter IC's) now there's an attribute "kW_measured_corr_value" as factor (often between 1.03 ... 1.07). You may measure the real charging power consumption with car or external power meter to determine a value other than the default 1 (if needed).
 
 
 I'm not responsible in case of any unexpected behaviours, failures, damages. That's not a deep inspected, reviewed or monitored software. It's an open source tool in relation to a proprietary commercial product: the product or it's API may be in change by future deliveries or firmware updates. Feel free to inspect and adopt the code.
