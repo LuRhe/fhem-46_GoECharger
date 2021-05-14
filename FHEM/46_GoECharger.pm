@@ -1092,7 +1092,7 @@ sub GoECharger_WriteReadings($$$) {
 		<li>load_mgmt_prio 				- set load_mgmt priority for this box from high to low (1...99)</li>
 		<li>load_mgmt_grp 				- load_mgmt group ID (string>8, see App) to identify same group</li> <li>load_mgmt_fallbckamp		 - fallback current of box if cloud load_mgmt not available (CHECK your installation to prevent overload (0=never use it, else 6...16A)</li>
 		<li>payload 				    - for test or more: set known API keys (e.g. alw=1), be sure what you do </li>
-		<li>restart 					- reboot the box</li>
+		<li>restart 					- restart btw. reboot the charger</li>
     </ul>
     <a name="GoEChargerget"></a>
     <b>get</b>
