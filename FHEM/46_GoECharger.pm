@@ -28,7 +28,7 @@
 # 0.1.9 help changed
 # 0.2.0 enhanced set commands
 # 0.2.1 changed help and attribute "used_api_keys" (default,all,minimal) 02.03.2021
-# 0.2.2 added set command to restart the charger
+# 0.2.2 added new set command (to restart the charger)
 
 
 package main;
@@ -1277,7 +1277,7 @@ sub GoECharger_WriteReadings($$$) {
 		<li>load_mgmt_prio 				- setze Prorität dieser Box in der Gruppe von hoch ... niedrig (1...99)</li>
 		<li>load_mgmt_grp 				- setze die Gruppen-ID-Kennung (gleich oder größer 8 Zeichen, siehe App!)</li> <li>load_mgmt_fallbckamp		   - setze fallback Strom dieser Box wenn das Cloud Lastmanagement nicht verfügbar ist (Achtung! Überlast Installation vermeiden; 0=nicht mehr laden, sonst 6...16A)</li>
 		<li>payload 				    - für Test u.a.: setze bekannte API keys (e.g. alw=1) - überlege dir, was du eingibst</li>
-		<li>restart 				    - Neustart (Reboot) der Wallbox</li>
+		<li>restart 				    - Neustart bzw. Reboot der Wallbox</li>
     </ul>
     <a name="GoEChargerget"></a>
     <b>get</b>
