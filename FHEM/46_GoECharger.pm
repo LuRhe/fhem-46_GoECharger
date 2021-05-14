@@ -28,6 +28,7 @@
 # 0.1.9 help changed
 # 0.2.0 enhanced set commands
 # 0.2.1 changed help and attribute "used_api_keys" (default,all,minimal) 02.03.2021
+# 0.2.2 added set command to restart the charger
 
 
 package main;
