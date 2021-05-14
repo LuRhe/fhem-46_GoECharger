@@ -326,7 +326,7 @@ sub GoECharger_Undef($$) {
 
     my $name            = $hash->{NAME};
 
-
+	RemoveInternalTimer($hash);
     Log3 $name, 3, "GoECharger ($name) - Device $name deleted";
     delete $modules{GoECharger}{defptr}{HOST} if( defined($modules{GoECharger}{defptr}{HOST}) and $hash->{HOST} );
 
