@@ -41,7 +41,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.1";
+my $version = "0.2.2";
 
 my %goevar;
 my $reading_keys_json_all='';
@@ -639,9 +639,16 @@ sub GoECharger_Set($@) {
 		    return "Arg $arg not allowed for $cmd";
         }
 
+	}elsif( $cmd eq 'restart' ) {
+		if (!($arg)){
+			$queue_cmd  = $setpath.'rst=1';
+		}else{
+		    return "Arg $arg not allowed for $cmd";
+        }
+
     } else {
 
-        my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp payload";
+        my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp payload restart:noArg";
 
         return "Unknown argument $cmd, choose one of $list";
     }
@@ -1084,6 +1091,7 @@ sub GoECharger_WriteReadings($$$) {
 		<li>load_mgmt_prio 				- set load_mgmt priority for this box from high to low (1...99)</li>
 		<li>load_mgmt_grp 				- load_mgmt group ID (string>8, see App) to identify same group</li> <li>load_mgmt_fallbckamp		 - fallback current of box if cloud load_mgmt not available (CHECK your installation to prevent overload (0=never use it, else 6...16A)</li>
 		<li>payload 				    - for test or more: set known API keys (e.g. alw=1), be sure what you do </li>
+		<li>restart 					- reboot the box</li>
     </ul>
     <a name="GoEChargerget"></a>
     <b>get</b>
@@ -1268,6 +1276,7 @@ sub GoECharger_WriteReadings($$$) {
 		<li>load_mgmt_prio 				- setze Prorität dieser Box in der Gruppe von hoch ... niedrig (1...99)</li>
 		<li>load_mgmt_grp 				- setze die Gruppen-ID-Kennung (gleich oder größer 8 Zeichen, siehe App!)</li> <li>load_mgmt_fallbckamp		   - setze fallback Strom dieser Box wenn das Cloud Lastmanagement nicht verfügbar ist (Achtung! Überlast Installation vermeiden; 0=nicht mehr laden, sonst 6...16A)</li>
 		<li>payload 				    - für Test u.a.: setze bekannte API keys (e.g. alw=1) - überlege dir, was du eingibst</li>
+		<li>restart 				    - Neustart (Reboot) der Wallbox</li>
     </ul>
     <a name="GoEChargerget"></a>
     <b>get</b>
