@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-UPD 2021-05-14_18:53:31 64739 FHEM/46_GoECharger.pm
-=======
-UPD 2021-05-14_19:00:59 64767 FHEM/46_GoECharger.pm
->>>>>>> devel
+UPD 2021-05-14_19:07:16 64767 FHEM/46_GoECharger.pm
