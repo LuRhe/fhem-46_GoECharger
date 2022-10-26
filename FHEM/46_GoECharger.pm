@@ -29,6 +29,7 @@
 # 0.2.0 enhanced set commands
 # 0.2.1 changed help and attribute "used_api_keys" (default,all,minimal) 02.03.2021
 # 0.2.2 added new set command to restart the charger
+# 0.2.3 added new set command change Phases of the V3 charger
 
 
 package main;
@@ -42,7 +43,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.2";
+my $version = "0.2.3";
 
 my %goevar;
 my $reading_keys_json_all='';
@@ -152,7 +153,8 @@ sub GoECharger_API_V15($) {
 														# if(json.car==1)message = "Zuerst Auto anstecken"
 														# else message = "Restzeit:  … "
 						nmo		=>	'norway_mode',		#W# Erdungserk. aktiv= 0, Norway Mode (nurIt-Netze) = deakt = 1
-						eca		=>	'energy_card01', 	#R#  Geladene Energiemenge pro RFID Karte von 1-10
+						fsp     =>  'force_single_phase', # Zeigt an ob einphasiges Laden aktiviert ist
+                        eca		=>	'energy_card01', 	#R#  Geladene Energiemenge pro RFID Karte von 1-10
 						ecr		=>	'energy_card02',		# Beispiel: eca==1400: 140kWh auf Karte 1 geladen
 						ecd		=>	'energy_card03', 	# Beispiel: ec7==1400: 140kWh auf Karte 7 geladen
 						ec4		=>	'energy_card04', 	# Beispiel: ec1==1400: 140kWh auf Karte 10 geladen
@@ -229,7 +231,7 @@ sub GoECharger_API_V15($) {
 # Beispiel:  http://192.168.4.1/mqtt?payload=amp=16
 
 $reading_keys_json_all= join(' ', keys(%goevar));
-$reading_keys_json_default='adi afi aho alw ama amp amt ast car cbl cch cdi cfi cid dwo dws err eto lbr lch loa loe lof log lom lop lot lse tmp ust pha wak';
+$reading_keys_json_default='adi afi aho alw ama amp amt ast car cbl cch cdi cfi cid dwo dws err eto lbr lch loa loe lof log lom lop lot lse tmp ust pha wak fsp';
 $reading_keys_json_minimal='alw amp ast car dws err eto ust';
 $reading_keys_json=$reading_keys_json_default;
 
@@ -249,8 +251,7 @@ sub GoECharger_ErrorHandling($$$);
 sub GoECharger_WriteReadings($$$);
 sub GoECharger_Timer_GetData($);
 
-my %paths = (	'status'	=> '/status'
-			);
+my %paths = (	'status'	=> '/status');
 
 
 sub GoECharger_Initialize($) {
@@ -312,8 +313,7 @@ sub GoECharger_Define($$) {
 	CommandAttr(undef,$name.' event-on-change-reading '.'.*');
 	CommandAttr(undef,$name.' event-on-update-reading '.'state');
 	CommandAttr(undef,$name.' eventMap '.'/allow_charging 1:on/ /allow_charging 0:off/');
-	CommandAttr(undef,$name.' stateFormat '.'state
-KW_charging_measured kW');
+	CommandAttr(undef,$name.' stateFormat '.'state KW_charging_measured kW');
 	CommandAttr(undef,$name.' webCmd '.'on:off');
 	CommandAttr(undef,$name.' kW_measured_corr_value '.'1.00');
 	CommandAttr(undef,$name.' interval '.$hash->{INTERVAL});
@@ -632,8 +632,17 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
-
-	}elsif( $cmd eq 'payload' ) {
+    }elsif( $cmd eq 'force_single_phase' ) {
+		if ($arg eq '3_Phases') {
+				$arg=0;
+				$queue_cmd  = $setpath.'fsp='.$arg;
+		}elsif($arg eq '1_Phase'){
+				$arg=1;
+				$queue_cmd  = $setpath.'fsp='.$arg;
+		}else{
+		    return "Arg $arg not allowed for $cmd";
+        }
+    }elsif( $cmd eq 'payload' ) {
 		if (length($arg) >=5){
 			$queue_cmd  = $setpath.$arg;
 		}else{
@@ -649,7 +658,7 @@ sub GoECharger_Set($@) {
 
     } else {
 
-        my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp payload restart:noArg";
+        my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp force_single_phase:1_Phase,3_Phases payload restart:noArg";
 
         return "Unknown argument $cmd, choose one of $list";
     }
@@ -877,6 +886,14 @@ sub GoECharger_WriteReadings($$$) {
 				$tmpv='locked_always';
 			}
 			$v=$tmpv;
+		
+        }elsif($r eq 'fsp'){
+			if ($v==1){
+				$tmpv='1_Phase';
+			}else{ #($v==0)
+				$tmpv='3_Phases';
+			}
+			$v=$tmpv;
 		}
 
 		# test if $r is known at @reading_keys and create reading ...
@@ -1008,6 +1025,7 @@ sub GoECharger_WriteReadings($$$) {
         <li>err = error (error: 1=RCCB (Fi), 3=PHASE, 8=NO_GROUND)</li>
         <li>eto = kWh_charged_total&nbsp&nbsp&nbsp&nbsp(total energy charged by wallbox recalculated to kWh, divided by 10)</li>
         <li>fwv = firmware &nbsp&nbsp&nbsp&nbsp(version e.g. 033)</li>
+        <li>fsp = force_single_phase (shows if currently single phase charge is enforced)</li>
         <li>lbr = led_brightness &nbsp&nbsp&nbsp&nbsp(brightness between 0=dark and full bright=255)</li>
         <li>lch = load_mgmt_sec (load management: seconds since last charging with car available (0 if charging))</li>
         <li>loa = load_mgmt_curramp (load management Ampere (actual given current), controlled by load mgmt.)</li>
@@ -1090,6 +1108,7 @@ sub GoECharger_WriteReadings($$$) {
 		<li>ap_password					- change the on site local wallbox wifi accesspoint password (here checked as 6...12 char)</li>
 		<li>load_mgmt_cloud				- set load management via cloud enabled (1) or disabled (0)</li> <li>load_mgmt_grpamp			 - set allowed total current for all wallboxes within load_mgmt_grp (6...32A)</li> <li>load_mgmt_minamp			   - set minimum load_mgmt current neccessary for this wallbox or car (6...16A, Zoe may be 10A!)</li>
 		<li>load_mgmt_prio 				- set load_mgmt priority for this box from high to low (1...99)</li>
+        <li>force_single_phase 			- set 1 or 3 Phases for loading: 1= 1 Phase, 0= 3 Phases (only HW V3)</li>
 		<li>load_mgmt_grp 				- load_mgmt group ID (string>8, see App) to identify same group</li> <li>load_mgmt_fallbckamp		 - fallback current of box if cloud load_mgmt not available (CHECK your installation to prevent overload (0=never use it, else 6...16A)</li>
 		<li>payload 				    - for test or more: set known API keys (e.g. alw=1), be sure what you do </li>
 		<li>restart 					- restart btw. reboot the charger</li>
@@ -1201,6 +1220,7 @@ sub GoECharger_WriteReadings($$$) {
         <li>lom = load_mgmt_minamp (Lastmanagement minimale Amperezahl)</li>
         <li>lon = load_mgmt_num (Lastmanagement: erw. Anz. Ladestationen (nicht unterstützt))</li>
         <li>lop = load_mgmt_prio (Lastmanagement Priorität)</li>
+        <li>lop = force_single_phase  (Phasenumschaltung nur HW V3)</li>
         <li>lot = load_mgmt_grpamp (Lastmanagement Gruppe Total Ampere)</li>
         <li>lse = led_save_energy (LED nach 10 Sekunden abschalten ja = 1, nein = 0 // funktioniert so nicht, r2x= nutzen!)</li>
         <li>mcc = mqtt_rdy (MQTT custom connected 0 = nicht verbunden 1 = verbunden)</li>
@@ -1273,10 +1293,13 @@ sub GoECharger_WriteReadings($$$) {
 		<li>amp_max_wallbox				- setze max Strom-Limit der Wallbox in Abhängigkeit Absicherung und Wallboxzuleitung...</li>
 		<li>ap_password					- setze wifi Passwort (6...12 Zeichen nötig)</li>
 		<li>load_mgmt_cloud				- erlaube Lastmanagement via Cloud (an=1, aus=0)</li>
-		<li>load_mgmt_grpamp			- setze erlaubten totalen Strom aller Wallboxen (gilt für alle Phasen, 6...32A)</li> <li>load_mgmt_minamp			 - setze minimal nötigen Ladestrom dieser Wallbox der Gruppe (6...16A, Zoe ggf. 10A!)</li>
+		<li>load_mgmt_grpamp			- setze erlaubten totalen Strom aller Wallboxen (gilt für alle Phasen, 6...32A)</li> 
+        <li>load_mgmt_minamp			- setze minimal nötigen Ladestrom dieser Wallbox der Gruppe (6...16A, Zoe ggf. 10A!)</li>
 		<li>load_mgmt_prio 				- setze Prorität dieser Box in der Gruppe von hoch ... niedrig (1...99)</li>
-		<li>load_mgmt_grp 				- setze die Gruppen-ID-Kennung (gleich oder größer 8 Zeichen, siehe App!)</li> <li>load_mgmt_fallbckamp		   - setze fallback Strom dieser Box wenn das Cloud Lastmanagement nicht verfügbar ist (Achtung! Überlast Installation vermeiden; 0=nicht mehr laden, sonst 6...16A)</li>
-		<li>payload 				    - für Test u.a.: setze bekannte API keys (e.g. alw=1) - überlege dir, was du eingibst</li>
+		<li>load_mgmt_grp 				- setze die Gruppen-ID-Kennung (gleich oder größer 8 Zeichen, siehe App!)</li> 
+        <li>load_mgmt_fallbckamp		- setze fallback Strom dieser Box wenn das Cloud Lastmanagement nicht verfügbar ist (Achtung! Überlast Installation vermeiden; 0=nicht mehr laden, sonst 6...16A)</li>
+        <li>force_single_phase 			- setze 1 oder 3 Phasen zum Laden: 1= 1 Phase, 0= 3 Phasen (nur HW V3)</li>  
+        <li>payload 				    - für Test u.a.: setze bekannte API keys (e.g. alw=1) - überlege dir, was du eingibst</li>
 		<li>restart 				    - Neustart bzw. Reboot der Wallbox</li>
     </ul>
     <a name="GoEChargerget"></a>
