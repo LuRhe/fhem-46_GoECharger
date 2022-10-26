@@ -29,6 +29,7 @@
 # 0.2.0 enhanced set commands
 # 0.2.1 changed help and attribute "used_api_keys" (default,all,minimal) 02.03.2021
 # 0.2.2 added new set command to restart the charger
+# 0.2.3 added new set command change Phases of the V3 charger
 
 
 package main;
@@ -42,7 +43,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.2";
+my $version = "0.2.3";
 
 my %goevar;
 my $reading_keys_json_all='';
