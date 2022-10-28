@@ -898,22 +898,22 @@ sub GoECharger_WriteReadings($$$) {
 			$v=$tmpv;
         }elsif($r eq 'tma'){
             my @vtmp=@{$responsedata->{'tma'}};
-            $tmpr='tma1';
+            $tmpr='temperature_tma_1';
             $tmpv=sprintf("%.1f",$vtmp[0]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='tma2';
+            $tmpr='temperature_tma_2';
             $tmpv=sprintf("%.1f",$vtmp[1]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='tma3';
+            $tmpr='temperature_tma_3';
             $tmpv=sprintf("%.1f",$vtmp[2]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='tma4';
+            $tmpr='temperature_tma_4';
             $tmpv=sprintf("%.1f",$vtmp[3]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='tma5';
+            $tmpr='temperature_tma_5';
             $tmpv=sprintf("%.1f",$vtmp[4]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='tma6';
+            $tmpr='temperature_tma_6';
             $tmpv=sprintf("%.1f",$vtmp[5]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
             $r="";
