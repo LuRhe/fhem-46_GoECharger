@@ -904,6 +904,18 @@ sub GoECharger_WriteReadings($$$) {
             $tmpr='tma2';
             $tmpv=sprintf("%.1f",$vtmp[1]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
+            $tmpr='tma3';
+            $tmpv=sprintf("%.1f",$vtmp[2]);
+            readingsBulkUpdate($hash,$tmpr,$tmpv);
+            $tmpr='tma4';
+            $tmpv=sprintf("%.1f",$vtmp[3]);
+            readingsBulkUpdate($hash,$tmpr,$tmpv);
+            $tmpr='tma5';
+            $tmpv=sprintf("%.1f",$vtmp[4]);
+            readingsBulkUpdate($hash,$tmpr,$tmpv);
+            $tmpr='tma6';
+            $tmpv=sprintf("%.1f",$vtmp[5]);
+            readingsBulkUpdate($hash,$tmpr,$tmpv);
             $r="";
         }
 
