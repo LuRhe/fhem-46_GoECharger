@@ -908,12 +908,10 @@ sub GoECharger_WriteReadings($$$) {
 
     # create state derived from 'alw' and 'car'
 	$tmpv=sprintf("%d",($responsedata->{car}));
-	if ($tmpv ==1){
-		if (($responsedata->{alw})==1){
-			$tmpstate='ready_no_car';
-		}else{
-		    $tmpstate='not_allowed';
-		}
+    if (($responsedata->{alw})==0 && $tmpv !=1 ){
+		$tmpstate='not_allowed';
+    }elsif ($tmpv ==1){
+		$tmpstate='ready_no_car';
 	}elsif($tmpv ==2){
 		$tmpstate='charging';
 	}elsif($tmpv ==3){
