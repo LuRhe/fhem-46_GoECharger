@@ -82,8 +82,8 @@ sub GoECharger_API_V15($) {
 														# D... phase 3 nach dem Schütz
 														# E... phase 2 nach dem Schütz
 														# F... phase 1 nach dem Schütz
-						tmp		=>	'temperature',		#R# Temperatur des Controllers in °C (nur bis GO-E V2)
-                        tma		=>	'temperature',		#R# Temperatur des Controllers in °C (ersetzt ab V3 tmp)
+						tmp		=>	'temperature_tmp',		#R# Temperatur des Controllers in °C (nur bis GO-E V2)
+                        tma		=>	'temperature_tma',		#R# Temperatur des Controllers in °C (ersetzt ab V3 tmp)
 						dws		=>	'kWh_charged_last',	#R# Geladene Energiemenge in Deka-Watt-Sekunden,
 														# 100’000 = 1’000’000 Ws (=277Wh = 0,277kWh)
 						dwo		=>	'stop_at_num_kWh',	#W# Abschaltwert in 0.1kWh wenn stp==2, für dws Parameter,
