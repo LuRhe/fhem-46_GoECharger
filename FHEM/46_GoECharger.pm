@@ -30,6 +30,7 @@
 # 0.2.1 changed help and attribute "used_api_keys" (default,all,minimal) 02.03.2021
 # 0.2.2 added new set command to restart the charger
 # 0.2.3 added new set command change Phases of the V3 charger
+# 0.2.4 added new Temperature for V3 and optimized STATE when go-e is not allowed to loading
 
 
 package main;
@@ -43,7 +44,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.3";
+my $version = "0.2.4";
 
 my %goevar;
 my $reading_keys_json_all='';
@@ -81,7 +82,8 @@ sub GoECharger_API_V15($) {
 														# D... phase 3 nach dem Schütz
 														# E... phase 2 nach dem Schütz
 														# F... phase 1 nach dem Schütz
-						tmp		=>	'temperature',		#R# Temperatur des Controllers in °C
+						tmp		=>	'temperature',		#R# Temperatur des Controllers in °C (nur bis GO-E V2)
+                        tma		=>	'temperature',		#R# Temperatur des Controllers in °C (ersetzt ab V3 tmp)
 						dws		=>	'kWh_charged_last',	#R# Geladene Energiemenge in Deka-Watt-Sekunden,
 														# 100’000 = 1’000’000 Ws (=277Wh = 0,277kWh)
 						dwo		=>	'stop_at_num_kWh',	#W# Abschaltwert in 0.1kWh wenn stp==2, für dws Parameter,
@@ -894,7 +896,16 @@ sub GoECharger_WriteReadings($$$) {
 				$tmpv='3_Phases';
 			}
 			$v=$tmpv;
-		}
+        }elsif($r eq 'tma'){
+            my @vtmp=@{$responsedata->{'tma'}};
+            $tmpr='tma1';
+            $tmpv=sprintf("%.1f",$vtmp[0]);
+            readingsBulkUpdate($hash,$tmpr,$tmpv);
+            $tmpr='tma2';
+            $tmpv=sprintf("%.1f",$vtmp[1]);
+            readingsBulkUpdate($hash,$tmpr,$tmpv);
+            $r="";
+        }
 
 		# test if $r is known at @reading_keys and create reading ...
 		my %rkeys = map { $_, 1 } @reading_keys;
@@ -1074,7 +1085,8 @@ sub GoECharger_WriteReadings($$$) {
         <li>tds = daylights_time_offset (Daylight saving time offset, e.g. 1 at MiddleEurope)</li>
         <li>tma = curr_sense_Typ2 (Array 0,1,2,3,4 current sensors at Typ2 cable)</li>
         <li>tme = clock_time 	&nbsp&nbsp&nbsp&nbsp(String of date and time DDMMYYHHMM)</li>
-        <li>tmp = temperature 	&nbsp&nbsp&nbsp&nbsp(controller temperature)</li>
+        <li>tmp = temperature 	&nbsp&nbsp&nbsp&nbsp(controller temperature V2)</li>
+        <li>tma = temperature 	&nbsp&nbsp&nbsp&nbsp(controller temperature V3)</li>
         <li>tof = gmt_time_offset (time zone int. clock +100 (101 = GMT+1))</li>
         <li>txi = transmit_interface &nbsp&nbsp&nbsp&nbsp(last interface used to send state)</li>
         <li>uby = unlocked_by_card &nbsp&nbsp&nbsp&nbsp(the last id number of card used to get access)</li>
@@ -1260,7 +1272,8 @@ sub GoECharger_WriteReadings($$$) {
         <li>tds = daylights_time_offset (Daylight saving time offset (Sommerzeit) in h, Beispiel: 1 für Mitteleuropa)</li>
         <li>tma = curr_sense_Typ2 (Array 0,1,2,3,4 Stromsensoren Typ2)</li>
         <li>tme = clock_time 	&nbsp&nbsp&nbsp&nbsp(String  Akt. Uhrzeit, formatiert als ddmmyyhhmm)</li>
-        <li>tmp = temperature 	&nbsp&nbsp&nbsp&nbsp(Temperatur des Controllers in °C)</li>
+        <li>tmp = temperature 	&nbsp&nbsp&nbsp&nbsp(Temperatur des Controllers in °, nur bis GO-E V2)</li>
+        <li>tma = temperature 	&nbsp&nbsp&nbsp&nbsp(Temperatur des Controllers in °C, ersetzt ab V3 tmp)</li>
         <li>tof = gmt_time_offset (Zeitzone in h f. int. Batt.-Uhr +100 (101 = GMT+1))</li>
         <li>txi = transmit_interface &nbsp&nbsp&nbsp&nbsp(last interface used to send state)</li>
         <li>uby = unlocked_by_card &nbsp&nbsp&nbsp&nbsp(Nummer der RFID Karte, die Ladevorgang freigeschalten hat)</li>
