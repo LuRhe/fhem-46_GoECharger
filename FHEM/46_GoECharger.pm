@@ -222,7 +222,6 @@ sub GoECharger_API_V15($) {
 						mck 	=>	'mqtt_key',			#W# String(16) MQTT custom key,Für MQTT Authentifizierung
 						mcc 	=>	'mqtt_rdy',			#W# MQTT custom connected 0 = nicht verbunden 1 = verbunden
 						amt		=>	'amp_limit_by_temp',# max Strom limitiert durch Temp im Charger
-						tma		=>	'curr_sense_Typ2',		# Array 0,1,2,3,4 Stromsensoren Typ2
 						txi		=>	'transmit_interface',		# unknown
 					);
 # lesbare Parameter: siehe oben Kommentarstart mit #R#
