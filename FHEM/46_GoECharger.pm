@@ -31,6 +31,7 @@
 # 0.2.2 added new set command to restart the charger
 # 0.2.3 added new set command change Phases of the V3 charger
 # 0.2.4 added new Temperature for V3 and optimized STATE when go-e is not allowed to loading
+# 0.2.5 addes hardware decision for V2 and V3
 
 
 package main;
@@ -44,7 +45,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.4";
+my $version = "0.2.5";
 
 my %goevar;
 my $reading_keys_json_all='';
@@ -471,9 +472,8 @@ sub GoECharger_Get($@) {
 sub GoECharger_Set($@) {
 
     my ($hash, $name, $cmd, $arg) = @_;
-    my $hardware = ReadingsVal($name, "hardware", "NONE");
-    Log3 $name, 3, "GoECharger ($name) - Hardware-Generation (ReadingsVal) ($hardware)";
     my $queue_cmd='';
+    my $hardware = ReadingsVal($name, 'hardware', 'NONE');
 	my $setpath='mqtt?payload='; #amp=7
 
     if( $cmd eq 'allow_charging' ) {
@@ -661,8 +661,13 @@ sub GoECharger_Set($@) {
         }
 
     }else{
-        my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp force_single_phase:1_Phase,3_Phases payload restart:noArg";
-        return "Unknown argument $cmd, choose one of $list";
+        if ($hardware eq 'V3'){
+            my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp force_single_phase:1_Phase,3_Phases payload restart:noArg";
+            return "Unknown argument $cmd, choose one of $list";
+        }elsif ($hardware eq 'V2'){
+            my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp payload restart:noArg";
+            return "Unknown argument $cmd, choose one of $list";
+    }
     }
 
     return 'There are still path commands in the action queue'
@@ -672,6 +677,7 @@ sub GoECharger_Set($@) {
     GoECharger_GetData($hash);
 
     return undef;
+
 }
 
 
@@ -826,7 +832,7 @@ sub GoECharger_WriteReadings($$$) {
 	my $tmpv;
 	my $numphases;
 	my $tmpstate;
-    my $hardware;
+    my $hardware = ReadingsVal($name, 'hardware', 'NONE');
 	$reading_keys_json=$hash->{USED_API_KEYS};
 	my @reading_keys=split(/ /,$reading_keys_json);
     readingsBeginUpdate($hash);
@@ -917,7 +923,7 @@ sub GoECharger_WriteReadings($$$) {
             $tmpr='temperature_tma_2';
             $tmpv=sprintf("%.1f",$vtmp[1]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
-            if($hardware=="V2"){
+            if($hardware eq "V2"){
                 $tmpr='temperature_tma_3';
                 $tmpv=sprintf("%.1f",$vtmp[2]);
                 readingsBulkUpdate($hash,$tmpr,$tmpv);
