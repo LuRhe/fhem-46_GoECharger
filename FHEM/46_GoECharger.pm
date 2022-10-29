@@ -46,7 +46,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.5";
+my $version = "0.2.6";
 
 my %goevar;
 my $reading_keys_json_all='';
