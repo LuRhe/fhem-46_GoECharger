@@ -31,7 +31,8 @@
 # 0.2.2 added new set command to restart the charger
 # 0.2.3 added new set command change Phases of the V3 charger
 # 0.2.4 added new Temperature for V3 and optimized STATE when go-e is not allowed to loading
-# 0.2.5 addes hardware decision for V2 and V3
+# 0.2.5 added hardware decision for V2 and V3
+# 0.2.6 fix for JSON Error regarding hardware decision
 
 
 package main;
@@ -1209,6 +1210,7 @@ sub GoECharger_WriteReadings($$$) {
 			<li>KW_charging_measured      - durch Wallbox gemessene Leistung (kW), ermittelt aus API 'nrg' key</li>
 			<li>KW_preset_calculated      - aus Anzahl Phasen*Strom*230V vom Modul berechnete Ladeleistung (kW)</li>
 			<li>Saved_amp_current_eeprom  - mit entsprechendem set Befehl (der in EEPROM speichert) zuletzt geänderter Ladestrom-Wert (A), der nach Neustart der Box wieder anliegen sollte (Achtung, kann bei Nutzung der App anders sein)</li>
+            <li>hardware      - go-eCharger Hardware Generation</li>
 		<br>
 		Folgende JSON API keys sind bekannt und können als Reading genutzt werden.<br>
 		API-Key = readingname (Beschreibung):<br>
