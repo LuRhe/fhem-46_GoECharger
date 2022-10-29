@@ -31,6 +31,7 @@
 # 0.2.2 added new set command to restart the charger
 # 0.2.3 added new set command change Phases of the V3 charger
 # 0.2.4 added new Temperature for V3 and optimized STATE when go-e is not allowed to loading
+# 0.2.5 addes hardware decision for V2 and V3
 
 
 package main;
@@ -44,7 +45,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.4";
+my $version = "0.2.5";
 
 my %goevar;
 my $reading_keys_json_all='';
@@ -233,8 +234,8 @@ sub GoECharger_API_V15($) {
 # Beispiel:  http://192.168.4.1/mqtt?payload=amp=16
 
 $reading_keys_json_all= join(' ', keys(%goevar));
-$reading_keys_json_default='adi afi aho alw ama amp amt ast car cbl cch cdi cfi cid dwo dws err eto lbr lch loa loe lof log lom lop lot lse tmp ust pha wak fsp';
-$reading_keys_json_minimal='alw amp ast car dws err eto ust';
+$reading_keys_json_default='adi afi aho alw ama amp amt ast car cbl cch cdi cfi cid dwo dws err eto lbr lch loa loe lof log lom lop lot lse tmp ust pha wak fsp fwv';
+$reading_keys_json_minimal='alw amp ast car dws err eto ust fwv';
 $reading_keys_json=$reading_keys_json_default;
 
 }
@@ -472,6 +473,7 @@ sub GoECharger_Set($@) {
 
     my ($hash, $name, $cmd, $arg) = @_;
     my $queue_cmd='';
+    my $hardware = ReadingsVal($name, 'hardware', 'NONE');
 	my $setpath='mqtt?payload='; #amp=7
 
     if( $cmd eq 'allow_charging' ) {
@@ -658,11 +660,14 @@ sub GoECharger_Set($@) {
 		    return "Arg $arg not allowed for $cmd";
         }
 
-    } else {
-
-        my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp force_single_phase:1_Phase,3_Phases payload restart:noArg";
-
-        return "Unknown argument $cmd, choose one of $list";
+    }else{
+        if ($hardware eq 'V3'){
+            my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp force_single_phase:1_Phase,3_Phases payload restart:noArg";
+            return "Unknown argument $cmd, choose one of $list";
+        }elsif ($hardware eq 'V2'){
+            my $list = "allow_charging:0,1 amp_current:slider,6,1,$maxamp amp_current_eeprom:slider,6,1,$maxamp led_brightness:slider,0,5,255 led_color_chg:colorpicker,RGB led_color_idle:colorpicker,RGB led_color_fin:colorpicker,RGB access_control_state:access_open,by_RFID_or_App,price_or_auto cable_lock_state_at_box:while_car_present,locked_always,while_charging stop_at_num_kWh:slider,0,1,80 led_save_energy:0,1 byPrice_till_oclock_charge:slider,0,1,24 byPrice_min_hrs_charge:slider,0,1,23 amp_max_wallbox:slider,6,1,32 ap_password load_mgmt_cloud:0,1 load_mgmt_grpamp:slider,6,1,32 load_mgmt_minamp:slider,6,1,16 load_mgmt_prio:slider,1,1,99 load_mgmt_grp load_mgmt_fallbckamp payload restart:noArg";
+            return "Unknown argument $cmd, choose one of $list";
+    }
     }
 
     return 'There are still path commands in the action queue'
@@ -672,6 +677,7 @@ sub GoECharger_Set($@) {
     GoECharger_GetData($hash);
 
     return undef;
+
 }
 
 
@@ -826,6 +832,7 @@ sub GoECharger_WriteReadings($$$) {
 	my $tmpv;
 	my $numphases;
 	my $tmpstate;
+    my $hardware = ReadingsVal($name, 'hardware', 'NONE');
 	$reading_keys_json=$hash->{USED_API_KEYS};
 	my @reading_keys=split(/ /,$reading_keys_json);
     readingsBeginUpdate($hash);
@@ -850,6 +857,17 @@ sub GoECharger_WriteReadings($$$) {
 				$tmpv='by_RFID_or_App';
 			}
 			$v=$tmpv;
+
+        }elsif($r eq 'fwv'){
+            $tmpr='hardware';
+            if ($v lt "050"){
+				$tmpv='V2';
+                readingsBulkUpdate($hash,$tmpr,$tmpv);
+            }else{ #($v gt "050")
+				$tmpv='V3';
+                readingsBulkUpdate($hash,$tmpr,$tmpv);
+			}
+        $hardware=$tmpv
 
 		}elsif($r eq 'dwo'){
 			$v=$v/10;
@@ -896,6 +914,7 @@ sub GoECharger_WriteReadings($$$) {
 				$tmpv='3_Phases';
 			}
 			$v=$tmpv;
+
         }elsif($r eq 'tma'){
             my @vtmp=@{$responsedata->{'tma'}};
             $tmpr='temperature_tma_1';
@@ -904,18 +923,20 @@ sub GoECharger_WriteReadings($$$) {
             $tmpr='temperature_tma_2';
             $tmpv=sprintf("%.1f",$vtmp[1]);
             readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='temperature_tma_3';
-            $tmpv=sprintf("%.1f",$vtmp[2]);
-            readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='temperature_tma_4';
-            $tmpv=sprintf("%.1f",$vtmp[3]);
-            readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='temperature_tma_5';
-            $tmpv=sprintf("%.1f",$vtmp[4]);
-            readingsBulkUpdate($hash,$tmpr,$tmpv);
-            $tmpr='temperature_tma_6';
-            $tmpv=sprintf("%.1f",$vtmp[5]);
-            readingsBulkUpdate($hash,$tmpr,$tmpv);
+            if($hardware eq "V2"){
+                $tmpr='temperature_tma_3';
+                $tmpv=sprintf("%.1f",$vtmp[2]);
+                readingsBulkUpdate($hash,$tmpr,$tmpv);
+                $tmpr='temperature_tma_4';
+                $tmpv=sprintf("%.1f",$vtmp[3]);
+                readingsBulkUpdate($hash,$tmpr,$tmpv);
+                $tmpr='temperature_tma_5';
+                $tmpv=sprintf("%.1f",$vtmp[4]);
+                readingsBulkUpdate($hash,$tmpr,$tmpv);
+                $tmpr='temperature_tma_6';
+                $tmpv=sprintf("%.1f",$vtmp[5]);
+                readingsBulkUpdate($hash,$tmpr,$tmpv);
+            }
             $r="";
         }
 
@@ -945,6 +966,7 @@ sub GoECharger_WriteReadings($$$) {
 	    $tmpstate='unknown';
 	}
 
+ 
     # define $maxamp by wallbox 'ama', cable 'cbl', adapter 'adi'
 	$maxamp = sprintf("%d",($responsedata->{ama}));
 	my $tmpcbl = sprintf("%d",($responsedata->{cbl}));
@@ -961,6 +983,7 @@ sub GoECharger_WriteReadings($$$) {
     #readingsBulkUpdateIfChanged($hash,'ActionQueue',scalar(@{$hash->{ActionQueue}}) . ' entries in the Queue');
     readingsBulkUpdateIfChanged($hash,'Http_state',(defined($hash->{ActionQueue}) and scalar(@{$hash->{ActionQueue}}) == 0 ? 'ready' : 'fetch data - ' . scalar(@{$hash->{ActionQueue}}) . ' paths in ActionQueue'));
     readingsEndUpdate($hash,1);
+
 }
 
 
