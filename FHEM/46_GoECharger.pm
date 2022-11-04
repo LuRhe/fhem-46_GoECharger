@@ -33,6 +33,7 @@
 # 0.2.4 added new Temperature for V3 and optimized STATE when go-e is not allowed to loading
 # 0.2.5 added hardware decision for V2 and V3
 # 0.2.6 fix for JSON Error regarding hardware decision
+# 0.2.7 added Phases Calculating for 1 or 3 Phases
 
 
 package main;
@@ -46,7 +47,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.6";
+my $version = "0.2.7";
 
 my %goevar;
 my $reading_keys_json_all='';
@@ -645,6 +646,7 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
+        
     }elsif( $cmd eq 'payload' ) {
 		if (length($arg) >=5){
 			$queue_cmd  = $setpath.$arg;
@@ -825,6 +827,7 @@ sub GoECharger_WriteReadings($$$) {
 	my $tmpr;
 	my $tmpv;
 	my $numphases;
+    my $calcphases;
 	my $tmpstate;
     my $hardware = ReadingsVal($name, 'hardware', 'NONE');
 	$reading_keys_json=$hash->{USED_API_KEYS};
@@ -875,7 +878,14 @@ sub GoECharger_WriteReadings($$$) {
 			$numphases +=1 if (($v & 16)==16);
 			$numphases +=1 if (($v & 32)==32);
 			$v=sprintf("%b",$v); #show binary
-
+		
+        }elsif($r eq 'fsp'){
+			if ($v == 1){
+				$calcphases=1;
+			}else{
+				$calcphases = $numphases;
+			}
+		
 		}elsif($r eq 'cid'){
 			$v=sprintf("%06X",$v);
 
@@ -942,7 +952,7 @@ sub GoECharger_WriteReadings($$$) {
     }
 
 	# calculate available power at 230V~
-    readingsBulkUpdate($hash,'KW_preset_calculated',sprintf("%.2f",($responsedata->{amp})*$numphases*0.230)) if(defined($responsedata->{amp}));
+    readingsBulkUpdate($hash,'KW_preset_calculated',sprintf("%.2f",($responsedata->{amp})*$calcphases*0.230)) if(defined($responsedata->{amp}));
 
     # create state derived from 'alw' and 'car'
 	$tmpv=sprintf("%d",($responsedata->{car}));
