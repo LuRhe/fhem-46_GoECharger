@@ -646,6 +646,7 @@ sub GoECharger_Set($@) {
 		}else{
 		    return "Arg $arg not allowed for $cmd";
         }
+        
     }elsif( $cmd eq 'payload' ) {
 		if (length($arg) >=5){
 			$queue_cmd  = $setpath.$arg;

@@ -1,2 +1,2 @@
 UPD 2022-10-26_20:18:10 2135 www/images/fhemSVG/ev_car_charger.svg
-UPD 2022-11-04_10:49:45 66573 FHEM/46_GoECharger.pm
+UPD 2022-11-04_11:31:44 67959 FHEM/46_GoECharger.pm
