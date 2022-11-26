@@ -879,13 +879,6 @@ sub GoECharger_WriteReadings($$$) {
 			$numphases +=1 if (($v & 32)==32);
 			$v=sprintf("%b",$v); #show binary
 		
-        }elsif($r eq 'fsp'){
-			if ($v == 1){
-				$calcphases=1;
-			}else{
-				$calcphases = $numphases;
-			}
-		
 		}elsif($r eq 'cid'){
 			$v=sprintf("%06X",$v);
 
@@ -912,12 +905,14 @@ sub GoECharger_WriteReadings($$$) {
 			$v=$tmpv;
 		
         }elsif($r eq 'fsp'){
-			if ($v==1){
-				$tmpv='1_Phase';
-			}else{ #($v==0)
-				$tmpv='3_Phases';
-			}
-			$v=$tmpv;
+            if ($v==1){
+                $tmpv='1_Phase';
+                $calcphases=1;
+            }else{ #($v==0)
+                $tmpv='3_Phases';
+                $calcphases = $numphases;
+            }
+            $v=$tmpv;
 
         }elsif($r eq 'tma'){
             my @vtmp=@{$responsedata->{'tma'}};
