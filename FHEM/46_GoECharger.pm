@@ -34,6 +34,7 @@
 # 0.2.5 added hardware decision for V2 and V3
 # 0.2.6 fix for JSON Error regarding hardware decision
 # 0.2.7 added Phases Calculating for 1 or 3 Phases
+# 0.2.8 Bugfix https://forum.fhem.de/index.php?action=post;quote=1246587;topic=110282.345;last_msg=1246587
 
 
 package main;
@@ -47,7 +48,7 @@ use HttpUtils;
 eval "use JSON;1" or $missingModul .= "JSON ";
 
 
-my $version = "0.2.7";
+my $version = "0.2.8";
 
 my %goevar;
 my $reading_keys_json_all='';
@@ -879,13 +880,6 @@ sub GoECharger_WriteReadings($$$) {
 			$numphases +=1 if (($v & 32)==32);
 			$v=sprintf("%b",$v); #show binary
 		
-        }elsif($r eq 'fsp'){
-			if ($v == 1){
-				$calcphases=1;
-			}else{
-				$calcphases = $numphases;
-			}
-		
 		}elsif($r eq 'cid'){
 			$v=sprintf("%06X",$v);
 
@@ -912,12 +906,14 @@ sub GoECharger_WriteReadings($$$) {
 			$v=$tmpv;
 		
         }elsif($r eq 'fsp'){
-			if ($v==1){
-				$tmpv='1_Phase';
-			}else{ #($v==0)
-				$tmpv='3_Phases';
-			}
-			$v=$tmpv;
+            if ($v==1){
+                $tmpv='1_Phase';
+                $calcphases=1;
+            }else{ #($v==0)
+                $tmpv='3_Phases';
+                $calcphases = $numphases;
+            }
+            $v=$tmpv;
 
         }elsif($r eq 'tma'){
             my @vtmp=@{$responsedata->{'tma'}};
